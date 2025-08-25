@@ -5,6 +5,10 @@
 #include <vector>
 #include <regex>
 #include <limits>
+#include <sstream>
+#include <unistd.h>
+#include <direct.h>
+
 using namespace std;
 
 // ==========================
@@ -81,54 +85,60 @@ string generateNextID(const string &filename, char prefix) {
 void loadCredentials(vector<UserCredential> &credentials) {
     credentials.clear();
 
-    // Load Attendees
-    ifstream inFile("attendees.txt");
-    if (inFile.good()) {
-        string line;
-        while (getline(inFile, line)) {
-            // Format: id,name,email,password
-            size_t pos1 = line.find(',');
-            size_t pos2 = line.find(',', pos1 + 1);
-            size_t pos3 = line.find(',', pos2 + 1);
+    string line;
 
-            if (pos1 != string::npos && pos2 != string::npos && pos3 != string::npos) {
-                string email = line.substr(pos2 + 1, pos3 - pos2 - 1);
-                string password = line.substr(pos3 + 1);
+    // ===== Load Attendees =====
+    ifstream inFile("attendees.txt");
+    if (!inFile.is_open()) {
+        cout << "Could not open attendees.txt" << endl;
+    } else {
+        while (getline(inFile, line)) {
+            stringstream ss(line);
+            string id, name, email, password;
+
+            if (getline(ss, id, ',') &&
+                getline(ss, name, ',') &&
+                getline(ss, email, ',') &&
+                getline(ss, password)) 
+            {
                 credentials.push_back({email, password, "Attendee"});
             }
         }
         inFile.close();
     }
 
-    // Load Exhibitors
+    // ===== Load Exhibitors =====
     inFile.open("exhibitors.txt");
-    if (inFile.good()) {
-        string line;
+    if (!inFile.is_open()) {
+        cout << "Could not open exhibitors.txt" << endl;
+    } else {
         while (getline(inFile, line)) {
-            // Format: id,companyName,email,password
-            size_t pos1 = line.find(',');
-            size_t pos2 = line.find(',', pos1 + 1);
-            size_t pos3 = line.find(',', pos2 + 1);
+            stringstream ss(line);
+            string id, companyName, email, password;
 
-            if (pos1 != string::npos && pos2 != string::npos && pos3 != string::npos) {
-                string email = line.substr(pos2 + 1, pos3 - pos2 - 1);
-                string password = line.substr(pos3 + 1);
+            if (getline(ss, id, ',') &&
+                getline(ss, companyName, ',') &&
+                getline(ss, email, ',') &&
+                getline(ss, password)) 
+            {
                 credentials.push_back({email, password, "Exhibitor"});
             }
         }
         inFile.close();
     }
 
-    // Load Admins
+    // ===== Load Admins =====
     inFile.open("admins.txt");
-    if (inFile.good()) {
-        string line;
+    if (!inFile.is_open()) {
+        cout << "Could not open admins.txt" << endl;
+    } else {
         while (getline(inFile, line)) {
-            // Format: email,password
-            size_t pos = line.find(',');
-            if (pos != string::npos) {
-                string email = line.substr(0, pos);
-                string password = line.substr(pos + 1);
+            stringstream ss(line);
+            string email, password;
+
+            if (getline(ss, email, ',') &&
+                getline(ss, password)) 
+            {
                 credentials.push_back({email, password, "Admin"});
             }
         }
@@ -276,9 +286,9 @@ void mainLogo() {
 
 void mainMenu() {
     vector<UserCredential> credentials;
-    loadCredentials(credentials);
 
     while (true) {
+        loadCredentials(credentials);
         mainLogo();
         cout << "============================================================\n";
         cout << "|| Please select one of the options below for logins:     ||\n";
