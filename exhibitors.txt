@@ -1,0 +1,2 @@
+E001,BestBuy,exhibitor1@gmail.com,pass123
+E002,TanginaMo,exhibitor2@gmail.com,pass456

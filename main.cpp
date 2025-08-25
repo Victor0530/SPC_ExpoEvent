@@ -47,7 +47,7 @@ void deleteAnnouncement(vector<Announcement>&);
 void viewAnnouncement(const vector<Announcement>&, const string&);
 
 bool adminMenu() {
-    system("cls");
+    
     return adminSelection();
 }
 
@@ -61,7 +61,7 @@ bool adminSelection() {
     };
 
     while (true) {
-        system("cls");
+        
         cout << "======================================\n";
         cout << "||          Admin Menu              ||\n";
         cout << "======================================\n";
@@ -88,7 +88,7 @@ bool adminSelection() {
             AnnouncementSelection();
             break;
         case 2:
-            system("cls");
+            
             cout << "======================================\n";
             cout << "||           Function 1             ||\n";
             cout << "======================================\n";
@@ -97,7 +97,7 @@ bool adminSelection() {
             cin.get();
             break;
         case 3:
-            system("cls");
+            
             cout << "======================================\n";
             cout << "||           Function 2             ||\n";
             cout << "======================================\n";
@@ -106,7 +106,7 @@ bool adminSelection() {
             cin.get();
             break;
         case 4:
-            system("cls");
+            
             cout << "======================================\n";
             cout << "||           Function 3             ||\n";
             cout << "======================================\n";
@@ -115,7 +115,7 @@ bool adminSelection() {
             cin.get();
             break;
         case 5:
-            system("cls");
+            
             return true;
         default:
             cout << "Invalid input entered, please try again!!!!\n";
@@ -139,7 +139,7 @@ bool attendeeMenu() {
     loadAnnouncements(announcements);
 
     while (true) {
-        system("cls");
+        
         cout << "======================================\n";
         cout << "||         Attendee Menu            ||\n";
         cout << "======================================\n";
@@ -168,7 +168,7 @@ bool attendeeMenu() {
             viewAnnouncement(announcements, "Attendee");
             break;
         case 2:
-            system("cls");
+            
             cout << "======================================\n";
             cout << "||       Attendee Function 1         ||\n";
             cout << "======================================\n";
@@ -177,7 +177,7 @@ bool attendeeMenu() {
             cin.get();
             break;
         case 3:
-            system("cls");
+            
             cout << "======================================\n";
             cout << "||       Attendee Function 2         ||\n";
             cout << "======================================\n";
@@ -186,7 +186,7 @@ bool attendeeMenu() {
             cin.get();
             break;
         case 4:
-            system("cls");
+            
             return true;
         default:
             cout << "|| Invalid input entered, please try again!!!! ||\n";
@@ -212,7 +212,7 @@ bool exhibitorMenu() {
     loadAnnouncements(announcements);
 
     while (true) {
-        system("cls");
+        
         cout << "======================================\n";
         cout << "||        Exhibitor Menu            ||\n";
         cout << "======================================\n";
@@ -241,7 +241,7 @@ bool exhibitorMenu() {
             viewAnnouncement(announcements, "Exhibitor");
             break;
         case 2:
-            system("cls");
+            
             cout << "======================================\n";
             cout << "||       Exhibitor Function 1        ||\n";
             cout << "======================================\n";
@@ -250,7 +250,7 @@ bool exhibitorMenu() {
             cin.get();
             break;
         case 3:
-            system("cls");
+            
             cout << "======================================\n";
             cout << "||       Exhibitor Function 2        ||\n";
             cout << "======================================\n";
@@ -259,7 +259,7 @@ bool exhibitorMenu() {
             cin.get();
             break;
         case 4:
-            system("cls");
+            
             return true;
         default:
             cout << "|| Invalid input entered, please try again!!!! ||\n";
@@ -285,7 +285,7 @@ void AnnouncementSelection() {
     loadAnnouncements(announcements);
 
     while (true) {
-        system("cls");
+        
         cout << "======================================\n";
         cout << "||      Announcement Menu           ||\n";
         cout << "======================================\n";
@@ -321,7 +321,7 @@ void AnnouncementSelection() {
             viewAnnouncement(announcements, "Admin");
             break;
         case 5:
-            system("cls");
+            
             return;
         default:
             cout << "Invalid input entered, please try again!!!!\n";
@@ -371,7 +371,7 @@ void saveAnnouncements(const vector<Announcement>& announcements) {
 }
 
 void postAnnouncement(vector<Announcement>& announcements) {
-    system("cls");
+    
     clearInputBuffer();
     cout << "======================================\n";
     cout << "||        Post Announcement         ||\n";
@@ -387,7 +387,7 @@ void postAnnouncement(vector<Announcement>& announcements) {
     getline(cin, input);
 
     if (input == "0") {
-        system("cls");
+        
         return;
     }
 
@@ -399,7 +399,7 @@ void postAnnouncement(vector<Announcement>& announcements) {
         cout << "Invalid input. Returning to announcement menu.\n";
         cout << "Press Enter to continue...\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -407,7 +407,7 @@ void postAnnouncement(vector<Announcement>& announcements) {
         cout << "Invalid option. Returning to announcement menu.\n";
         cout << "|| Press Enter to continue...        ||\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -421,7 +421,7 @@ void postAnnouncement(vector<Announcement>& announcements) {
     if (userTypeOption == 1) newAnn.userType = "Attendee";
     else if (userTypeOption == 2) newAnn.userType = "Exhibitor";
     else newAnn.userType = "Both";
-    system("cls");
+    
     cout << "Title:";
     getline(cin, newAnn.title);
     cout << "Content:";
@@ -435,11 +435,11 @@ void postAnnouncement(vector<Announcement>& announcements) {
     cout << "||Press Enter to continue...        ||\n";
     cout << "======================================\n";
     cin.get();
-    system("cls");
+    
 }
 
 void viewAnnouncement(const vector<Announcement>& announcements, const string& userType) {
-    system("cls");
+    
     cout << "======================================\n";
     cout << "||       View Announcements         ||\n";
     cout << "======================================\n";
@@ -449,7 +449,7 @@ void viewAnnouncement(const vector<Announcement>& announcements, const string& u
         cout << "|| Press Enter to continue...        ||\n";
         cout << "======================================\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -463,10 +463,10 @@ void viewAnnouncement(const vector<Announcement>& announcements, const string& u
         cout << "Option ->";
         string input;
         getline(cin, input);
-        system("cls");
+        
 
         if (input == "0") {
-            system("cls");
+            
             return;
         }
 
@@ -480,7 +480,7 @@ void viewAnnouncement(const vector<Announcement>& announcements, const string& u
             cout << "|| Press Enter to continue...        ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             return;
         }
 
@@ -490,7 +490,7 @@ void viewAnnouncement(const vector<Announcement>& announcements, const string& u
             cout << "|| Press Enter to continue...       ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             return;
         }
 
@@ -540,11 +540,11 @@ void viewAnnouncement(const vector<Announcement>& announcements, const string& u
     }
     cout << "\nPress Enter to continue...\n";
     cin.get();
-    system("cls");
+    
 }
 
 void editAnnouncement(vector<Announcement>& announcements) {
-    system("cls");
+    
     cout << "======================================\n";
     cout << "||        Edit Announcement         ||\n";
     cout << "======================================\n";
@@ -554,7 +554,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
         cout << "|| Press Enter to continue...        ||\n";
         cout << "======================================\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -567,10 +567,10 @@ void editAnnouncement(vector<Announcement>& announcements) {
     cout << "Option ->";
     string input;
     getline(cin, input);
-    system("cls");
+    
 
     if (input == "0") {
-        system("cls");
+        
         return;
     }
 
@@ -582,7 +582,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
         cout << "Invalid input. Returning to announcement menu.\n";
         cout << "Press Enter to continue...\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -590,7 +590,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
         cout << "Invalid option. Returning to announcement menu.\n";
         cout << "Press Enter to continue...\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -618,7 +618,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
         cout << "|| Press Enter to continue...       ||\n";
         cout << "======================================\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -626,7 +626,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
     getline(cin, input);
 
     if (input == "0") {
-        system("cls");
+        
         return;
     }
 
@@ -638,7 +638,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
         cout << "\nInvalid input. Returning to announcement menu.\n";
         cout << "Press Enter to continue...\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -653,7 +653,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
                 else if (newUserType == "2") ann.userType = "Exhibitor";
                 else if (newUserType == "3") ann.userType = "Both";
             }
-            system("cls");
+            
             cout << "\nEnter new title (leave blank to keep current): ";
             string newTitle;
             getline(cin, newTitle);
@@ -673,7 +673,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
             cout << "|| Press Enter to continue...        ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             return;
         }
     }
@@ -682,11 +682,11 @@ void editAnnouncement(vector<Announcement>& announcements) {
     cout << "|| Press Enter to continue...       ||\n";
     cout << "======================================\n";
     cin.get();
-    system("cls");
+    
 }
 
 void deleteAnnouncement(vector<Announcement>& announcements) {
-    system("cls");
+    
     cout << "======================================\n";
     cout << "||       Delete Announcement        ||\n";
     cout << "======================================\n";
@@ -696,7 +696,7 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
         cout << "|| Press Enter to continue...       ||\n";
         cout << "======================================\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -709,10 +709,10 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
     cout << "Option ->";
     string input;
     getline(cin, input);
-    system("cls");
+    
 
     if (input == "0") {
-        system("cls");
+        
         return;
     }
 
@@ -724,7 +724,7 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
         cout << "Invalid input. Returning to announcement menu.\n";
         cout << "Press Enter to continue...\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -732,7 +732,7 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
         cout << "Invalid option. Returning to announcement menu.\n";
         cout << "Press Enter to continue...\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -761,16 +761,16 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
         cout << "|| Press Enter to continue...       ||\n";
         cout << "======================================\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
     cout << "\nEnter the index of the announcement to delete (or 0 to go back): ";
     getline(cin, input);
-    system("cls");
+    
 
     if (input == "0") {
-        system("cls");
+        
         return;
     }
 
@@ -782,7 +782,7 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
         cout << "Invalid input. Returning to announcement menu.\n";
         cout << "|| Press Enter to continue...        ||\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -796,7 +796,7 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
             cout << "|| Press Enter to continue...        ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             return;
         }
     }
@@ -806,7 +806,7 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
     cout << "|| Press Enter to continue...       ||\n";
     cout << "======================================\n";
     cin.get();
-    system("cls");
+    
 }
 
 void clearInputBuffer() {
@@ -879,7 +879,7 @@ void initializeUserDatabase(vector<UserCredential>& credentials) {
 }
 
 void signUp(vector<UserCredential>& credentials) {
-    system("cls");
+    
     vector<string> newAcc = { "Attendee", "Exhibitor", "Admin", "Back to Main Menu" };
     const string adminVerificationPassword = "secureAdmin123";
 
@@ -894,7 +894,7 @@ void signUp(vector<UserCredential>& credentials) {
     cout << "Option ->";
     int option;
     cin >> option;
-    system("cls");
+    
 
     if (cin.fail() || option < 1 || option > 4) {
         cin.clear();
@@ -902,13 +902,13 @@ void signUp(vector<UserCredential>& credentials) {
         cout << "Invalid option. Returning to main menu.\n";
         cout << "Press Enter to continue...\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
     if (option == 4) {
         clearInputBuffer();
-        system("cls");
+        
         return;
     }
 
@@ -928,7 +928,7 @@ void signUp(vector<UserCredential>& credentials) {
             cout << "|| Press Enter to continue...       ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             return;
         }
     }
@@ -943,7 +943,7 @@ void signUp(vector<UserCredential>& credentials) {
         cout << "|| Press Enter to continue...       ||\n";
         cout << "======================================\n";
         cin.get();
-        system("cls");
+        
         return;
     }
 
@@ -955,7 +955,7 @@ void signUp(vector<UserCredential>& credentials) {
             cout << "|| Press Enter to continue...        ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             return;
         }
     }
@@ -976,7 +976,7 @@ void signUp(vector<UserCredential>& credentials) {
         cout << "|| Press Enter to continue...        ||\n";
         cout << "======================================\n";
         cin.get();
-        system("cls");
+        
         return;
     }
     outFile << newUser.email << "," << newUser.password << "\n";
@@ -991,7 +991,7 @@ void signUp(vector<UserCredential>& credentials) {
     cout << "\n" << left << setw(2) << newAcc[option - 1] << " account created successfully!\n";
     cout << "Press Enter to continue...\n";
     cin.get();
-    system("cls");
+    
 }
 
 bool attendeeLogin(vector<UserCredential>& credentials) {
@@ -1000,7 +1000,7 @@ bool attendeeLogin(vector<UserCredential>& credentials) {
     bool showError = false;
 
     while (attempts < maxAttempts) {
-        system("cls");
+        
         loginDetails user;
 
         cout << "======================================\n";
@@ -1040,20 +1040,20 @@ bool attendeeLogin(vector<UserCredential>& credentials) {
             cout << "|| Press Enter to continue...       ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             return attendeeMenu();
         }
         else {
             cout << "Incorrect attendee email or password. Please try again!!!\n";
             cout << "Press Enter to try again...\n";
             cin.get();
-            system("cls");
+            
             attempts++;
             showError = false;
         }
     }
 
-    system("cls");
+    
     cout << "======================================\n";
     cout << "|| Too many failed attempts. Attendee login failed. ||\n";
     cout << "|| Do you want to register a new account? (y/Y/n/N): ";
@@ -1061,7 +1061,7 @@ bool attendeeLogin(vector<UserCredential>& credentials) {
     getline(cin, response);
 
     while (response != "y" && response != "Y" && response != "n" && response != "N") {
-        system("cls");
+        
         cout << "======================================\n";
         cout << "|| Invalid input. Please enter y/Y for yes or n/N for no. ||\n";
         cout << "|| Do you want to register a new account? (y/Y/n/N): ";
@@ -1071,12 +1071,12 @@ bool attendeeLogin(vector<UserCredential>& credentials) {
     if (response == "y" || response == "Y") {
         signUp(credentials);
 
-        system("cls");
+        
         cout << "======================================\n";
         cout << "|| Would you like to try logging in again? (y/Y/n/N): ";
         getline(cin, response);
         while (response != "y" && response != "Y" && response != "n" && response != "N") {
-            system("cls");
+            
             cout << "======================================\n";
             cout << "|| Invalid input. Please enter y/Y for yes or n/N for no. ||\n";
             cout << "|| Would you like to try logging in again? (y/Y/n/N): ";
@@ -1087,7 +1087,7 @@ bool attendeeLogin(vector<UserCredential>& credentials) {
         }
     }
 
-    system("cls");
+    
     return false;
 }
 
@@ -1097,7 +1097,7 @@ bool exhibitorLogin(vector<UserCredential>& credentials) {
     bool showError = false;
 
     while (attempts < maxAttempts) {
-        system("cls");
+        
         loginDetails exhibitor;
 
         cout << "======================================\n";
@@ -1137,20 +1137,20 @@ bool exhibitorLogin(vector<UserCredential>& credentials) {
             cout << "|| Press Enter to continue...       ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             return exhibitorMenu();
         }
         else {
             cout << "Incorrect exhibitor email or password. Please try again!!!\n";
             cout << "Press Enter to try again...      \n";
             cin.get();
-            system("cls");
+            
             attempts++;
             showError = false;
         }
     }
 
-    system("cls");
+    
     cout << "======================================\n";
     cout << "Too many failed attempts. Exhibitor login failed.\n";
     cout << "Do you want to register a new account? (y/Y/n/N): ";
@@ -1158,7 +1158,7 @@ bool exhibitorLogin(vector<UserCredential>& credentials) {
     getline(cin, response);
 
     while (response != "y" && response != "Y" && response != "n" && response != "N") {
-        system("cls");
+        
         cout << "======================================\n";
         cout << "Invalid input. Please enter y/Y for yes or n/N for no.\n";
         cout << "Do you want to register a new account? (y/Y/n/N): ";
@@ -1167,12 +1167,12 @@ bool exhibitorLogin(vector<UserCredential>& credentials) {
 
     if (response == "y" || response == "Y") {
         signUp(credentials);
-        system("cls");
+        
         cout << "======================================\n";
         cout << "Would you like to try logging in again? (y/Y/n/N): ";
         getline(cin, response);
         while (response != "y" && response != "Y" && response != "n" && response != "N") {
-            system("cls");
+            
             cout << "======================================\n";
             cout << "Invalid input. Please enter y/Y for yes or n/N for no.\n";
             cout << "Would you like to try logging in again? (y/Y/n/N): ";
@@ -1183,7 +1183,7 @@ bool exhibitorLogin(vector<UserCredential>& credentials) {
         }
     }
 
-    system("cls");
+    
     return false;
 }
 
@@ -1193,7 +1193,7 @@ bool adminLogin(vector<UserCredential>& credentials) {
     bool showError = false;
 
     while (attempts < maxAttempts) {
-        system("cls");
+        
         loginDetails admin;
 
         cout << "======================================\n";
@@ -1233,7 +1233,7 @@ bool adminLogin(vector<UserCredential>& credentials) {
             cout << "|| Press Enter to continue...        ||\n";
             cout << "======================================\n";
             cin.get();
-            system("cls");
+            
             if (adminMenu()) {
                 return false;
             }
@@ -1243,13 +1243,13 @@ bool adminLogin(vector<UserCredential>& credentials) {
             cout << "Incorrect admin email or password. Please try again!!!\n";
             cout << "Press Enter to try again...\n";
             cin.get();
-            system("cls");
+            
             attempts++;
             showError = false;
         }
     }
 
-    system("cls");
+    
     cout << "======================================\n";
     cout << "Too many failed attempts. Admin login failed.\n";
     cout << "Do you want to register a new account? (y/Y/n/N): ";
@@ -1257,7 +1257,7 @@ bool adminLogin(vector<UserCredential>& credentials) {
     getline(cin, response);
 
     while (response != "y" && response != "Y" && response != "n" && response != "N") {
-        system("cls");
+        
         cout << "======================================\n";
         cout << "Invalid input. Please enter y/Y for yes or n/N for no.\n";
         cout << "Do you want to register a new account? (y/Y/n/N): ";
@@ -1267,12 +1267,12 @@ bool adminLogin(vector<UserCredential>& credentials) {
     if (response == "y" || response == "Y") {
         signUp(credentials);
 
-        system("cls");
+        
         cout << "======================================\n";
         cout << "Would you like to try logging in again? (y/Y/n/N): ";
         getline(cin, response);
         while (response != "y" && response != "Y" && response != "n" && response != "N") {
-            system("cls");
+            
             cout << "======================================\n";
             cout << "Invalid input. Please enter y/Y for yes or n/N for no.\n";
             cout << "Would you like to try logging in again? (y/Y/n/N): ";
@@ -1283,7 +1283,7 @@ bool adminLogin(vector<UserCredential>& credentials) {
         }
     }
 
-    system("cls");
+    
     return false;
 }
 
@@ -1328,7 +1328,7 @@ void mainMenu() {
     };
 
     while (true) {
-        system("cls");
+        
         mainLogo();
         cout << "|| Please select one of the options below for logins:      ||\n";
         cout << "============================================================\n";
@@ -1350,7 +1350,7 @@ void mainMenu() {
         }
 
         clearInputBuffer();
-        system("cls");
+        
         switch (menuOption) {
         case 1:
             cout << "============================================================\n";
