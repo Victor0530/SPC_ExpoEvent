@@ -6,6 +6,7 @@
 #include <regex>
 #include <limits>
 #include <sstream>
+#include <optional>
 #include <unistd.h>
 #include <direct.h>
 
@@ -146,10 +147,75 @@ void loadCredentials(vector<UserCredential> &credentials) {
     }
 }
 
+Attendee findAttendee(string email) {
+    Attendee foundAttendee;
+
+    ifstream inFile("attendees.txt");
+
+    string line;
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Attendee a;
+        getline(ss, a.id, ',');
+        getline(ss, a.name, ',');
+        getline(ss, a.email, ',');
+        getline(ss, a.password, ',');
+
+        if(a.email == email) {
+            foundAttendee = a;
+        }
+    }
+
+    return foundAttendee;
+}
+
+Exhibitor findExhibitor(string email) {
+    Exhibitor foundExhibitor;
+
+    ifstream inFile("exhibitors.txt");
+
+    string line;
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Exhibitor e;
+        getline(ss, e.id, ',');
+        getline(ss, e.companyName, ',');
+        getline(ss, e.email, ',');
+        getline(ss, e.password, ',');
+
+        if(e.email == email) {
+            foundExhibitor = e;
+        }
+    }
+
+    return foundExhibitor;
+}
+
+Admin findAdmin(string email) {
+    Admin foundAdmin;
+
+    ifstream inFile("admins.txt");
+
+    string line;
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Admin ad;
+        getline(ss, ad.email, ',');
+        getline(ss, ad.password, ',');
+
+        if(ad.email == email) {
+            foundAdmin = ad;
+        }
+    }
+
+    return foundAdmin;
+}
+
+
 // ==========================
-// LOGIN & SIGNUP
+// LOGIN MODULE
 // ==========================
-bool login(vector<UserCredential> &credentials, const string &role) {
+string login(vector<UserCredential> &credentials, const string &role) {
     const int maxAttempts = 3;
     int attempts = 0;
 
@@ -168,7 +234,7 @@ bool login(vector<UserCredential> &credentials, const string &role) {
                 cout << "\n============================================\n";
                 cout << "||  Login successful! Welcome, " << left << setw(10) << role << " ||\n";
                 cout << "============================================\n";
-                return true;
+                return user.email;
             }
         }
         cout << "\nInvalid credentials. Attempts left: " << maxAttempts - attempts - 1 << "\n";
@@ -177,9 +243,12 @@ bool login(vector<UserCredential> &credentials, const string &role) {
     cout << "===============================================\n";
     cout << "||" << right << setw(10) << role << " login failed after 3 attempts   ||\n";
     cout << "===============================================\n";
-    return false;
+    return "";
 }
 
+// ==========================
+// SIGN UP MODULE
+// ==========================
 void signUp(vector<UserCredential> &credentials) {
 
     const string adminVerificationPassword = "secureAdmin123";
@@ -410,6 +479,11 @@ void signUp(vector<UserCredential> &credentials) {
 }
 
 // ==========================
+// PROFILE DASHBOARD
+// ==========================
+
+
+// ==========================
 // MENUS
 // ==========================
 void mainLogo() {
@@ -464,10 +538,27 @@ void mainMenu() {
         string choice; getline(cin, choice);
         cout << endl;
 
-        if (choice == "1") login(credentials, "Attendee");
-        else if (choice == "2") login(credentials, "Exhibitor");
-        else if (choice == "3") login(credentials, "Admin");
-        else if (choice == "4") signUp(credentials);
+        if (choice == "1") {
+            string attendeeEmail = login(credentials, "Attendee");
+            if(attendeeEmail != "") {
+                Attendee attendee = findAttendee(attendeeEmail);
+
+            }
+
+        } else if (choice == "2")  {
+            string exhibitorEmail = login(credentials, "Exhibitor");
+            if(exhibitorEmail != "") {
+                Exhibitor exhibitor = findExhibitor(exhibitorEmail);
+
+            }
+
+        } else if (choice == "3") {
+            string adminEmail = login(credentials, "Admin");
+            if(adminEmail != "") {
+                Admin admin = findAdmin(adminEmail);
+            }
+
+        }else if (choice == "4") signUp(credentials);
         else if (choice == "0") {
             cout << "============================================================\n";
             cout << "||     Exiting... Thank you for using the system!         ||\n";
