@@ -214,6 +214,7 @@ void signUp(vector<UserCredential> &credentials) {
         }
         
     }
+    clearInputBuffer();
 
     // Verify if user has the permission to create an admin account
     if(choice == 3) {
@@ -252,8 +253,8 @@ void signUp(vector<UserCredential> &credentials) {
 
 
         // email field
-        bool emailExists = false;
         while(true) {
+            bool emailExists = false;
             cout << "Enter Email: "; getline(cin, a.email);
             if (!isValidEmail(a.email)) {
                 cout << "\n==============================================\n";
@@ -315,8 +316,8 @@ void signUp(vector<UserCredential> &credentials) {
         } while (e.companyName.empty());
         
         // email field
-        bool emailExists = false;
         while(true) {
+            bool emailExists = false;
             cout << "Enter Email: "; getline(cin, e.email);
             if (!isValidEmail(e.email)) {
                 cout << "\n==============================================\n";
@@ -336,47 +337,53 @@ void signUp(vector<UserCredential> &credentials) {
 
                 if(!emailExists) { break; }
             }
-            
-            // password field
-            do {
-                cout << "Enter Password: "; getline(cin, e.password);
-
-                if(e.password.empty()) {
-                cout << "\n==================================================\n";
-                cout << "||  Password cannot be empty. Please try again  ||\n";
-                cout << "==================================================\n\n";
-                }
-            } while (e.password.empty());
-            
-            // save to exhibitors.txt
-            ofstream outFile("exhibitors.txt", ios::app);
-            outFile << e.id << "," << e.companyName << "," << e.email << "," << e.password << "\n";
-            outFile.close();
-
-            // save to vector
-            credentials.push_back({e.email, e.password, "Exhibitor"});
-            cout << "\nExhibitor account created successfully!\n";
         }
+            
+        // password field
+        do {
+            cout << "Enter Password: "; getline(cin, e.password);
+
+            if(e.password.empty()) {
+            cout << "\n==================================================\n";
+            cout << "||  Password cannot be empty. Please try again  ||\n";
+            cout << "==================================================\n\n";
+            }
+        } while (e.password.empty());
+        
+        // save to exhibitors.txt
+        ofstream outFile("exhibitors.txt", ios::app);
+        outFile << e.id << "," << e.companyName << "," << e.email << "," << e.password << "\n";
+        outFile.close();
+
+        // save to vector
+        credentials.push_back({e.email, e.password, "Exhibitor"});
+        cout << "\nExhibitor account created successfully!\n";
 
     } else if(choice == 3) {
         // Admin signup
         Admin admin;
 
         // email field
-        bool emailExists = false;
         while(true) {
+            bool emailExists = false;
             cout << "Enter Email: "; getline(cin, admin.email);
-            for(const auto& cred : credentials) {
-                if (cred.email == admin.email) {
-                    cout << "\n=======================================================\n";
-                    cout << "|| Email already exists. Please use a different email. ||\n";
-                    cout << "=========================================================\n\n";
-                    emailExists = true;
-                    break;
-                }
-            }
+            if (!isValidEmail(admin.email)) {
+                cout << "\n==============================================\n";
+                cout << "||  Invalid email format. Please try again  ||\n";
+                cout << "==============================================\n\n";
 
-            if(!emailExists) { break; }
+            } else {
+                for(const auto& cred : credentials) {
+                    if (cred.email == admin.email) {
+                        cout << "\n=======================================================\n";
+                        cout << "|| Email already exists. Please use a different email. ||\n";
+                        cout << "=========================================================\n\n";
+                        emailExists = true;
+                        break;
+                    }
+                }
+                if(!emailExists) { break; }
+            }
         }
 
         // password field
