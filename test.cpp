@@ -60,24 +60,30 @@ bool isValidEmail(const string &email) {
 
 string generateNextID(const string &filename, char prefix) {
     ifstream inFile(filename);
-    string line, lastID = "";
+    string line;
+    int maxNum = 0;
+
     while (getline(inFile, line)) {
         size_t pos = line.find(',');
         if (pos != string::npos) {
-            lastID = line.substr(0, pos); // first field is always ID
+            string id = line.substr(0, pos); // first field is always ID
+            if (id[0] == prefix) {
+                try {
+                    int num = stoi(id.substr(1)); // skip prefix
+                    if (num > maxNum) maxNum = num; // keep track of largest number
+                } catch (...) {
+                    // ignore malformed IDs
+                }
+            }
         }
     }
     inFile.close();
 
-    if (lastID.empty()) {
-        return string(1, prefix) + "001"; // e.g., A001 if no record yet
-    } else {
-        int num = stoi(lastID.substr(1)); // skip prefix
-        num++;
-        stringstream ss;
-        ss << prefix << setw(3) << setfill('0') << num;
-        return ss.str();
-    }
+    // Generate next ID
+    int nextNum = maxNum + 1;
+    stringstream ss;
+    ss << prefix << setw(3) << setfill('0') << nextNum;
+    return ss.str();
 }
 
 // ==========================
@@ -481,7 +487,166 @@ void signUp(vector<UserCredential> &credentials) {
 // ==========================
 // PROFILE DASHBOARD
 // ==========================
+void attendeeDashboard(Attendee &a) {
+    while (true) {
+        cout << "\n=====================================================\n";
+        cout << "||               Attendee Dashboard                ||\n";
+        cout << "=====================================================\n";
+        cout << "|| 1. View Profile                                 ||\n";
+        cout << "|| 2. Update Profile                               ||\n";
+        cout << "|| 3. Delete Account                               ||\n";
+        cout << "|| 4. View Event Announcements                     ||\n";
+        cout << "|| 5. Purchase Tickets                             ||\n";
+        cout << "|| 6. View Purchased Tickets                       ||\n";
+        cout << "|| 7. Submit Feedbacks                             ||\n";
+        cout << "|| 0. Logout                                       ||\n";
+        cout << "=====================================================\n";
+        cout << "Choice: ";
 
+        string choice;
+        getline(cin, choice);
+
+        if (choice == "1") {
+            
+        }
+        else if (choice == "2") {
+            
+        }
+        else if (choice == "3") {
+            
+        }
+        else if (choice == "4") {
+            
+        }
+        else if (choice == "5") {
+            
+        }
+        else if (choice == "6") {
+            
+        }
+        else if (choice == "7") {
+            
+        }
+        else if (choice == "0") {
+            cout << "Logging out...\n";
+            break;
+        } else cout << "Invalid choice.\n";
+    }
+}
+
+void exhibitorDashboard(Exhibitor &e) {
+    while (true) {
+        cout << "\n=====================================================\n";
+        cout << "||               Exhibitor Dashboard               ||\n";
+        cout << "=====================================================\n";
+        cout << "|| 1. View Profile                                 ||\n";
+        cout << "|| 2. Update Profile                               ||\n";
+        cout << "|| 3. Delete Account                               ||\n";
+        cout << "|| 4. View Event Announcements                     ||\n";
+        cout << "|| 5. Post Event Announcement                      ||\n";
+        cout << "|| 6. Book Booths                                  ||\n";
+        cout << "|| 7. Manage Booth Details                         ||\n";
+        cout << "|| 8. Monitor Booth/Session Stats                  ||\n";
+        cout << "|| 9. Schedule Sessions                            ||\n";
+        cout << "|| 0. Logout                                       ||\n";
+        cout << "=====================================================\n";
+        cout << "Choice: ";
+
+        string choice;
+        getline(cin, choice);
+
+        if (choice == "1") {
+
+        }
+        else if (choice == "2") {
+
+        }
+        else if (choice == "3") {
+
+        }
+        else if (choice == "4") {
+
+        }
+        else if (choice == "5") {
+
+        }
+        else if (choice == "6") {
+
+        }
+        else if (choice == "7") {
+
+        }
+        else if (choice == "8") {
+
+        }
+        else if (choice == "9") {
+
+        }
+        else if (choice == "0") {
+            cout << "Logging out...\n";
+            break;
+        } else cout << "Invalid choice.\n";
+    }
+}
+
+void adminDashboard(Admin &ad) {
+    while (true) {
+        cout << "\n=====================================================\n";
+        cout << "||                 Admin Dashboard                 ||\n";
+        cout << "=====================================================\n";
+        cout << "|| 1. View Profile                                 ||\n"; 
+        cout << "|| 2. Update Profile                               ||\n"; 
+        cout << "|| 3. Manage Event Announcements                   ||\n"; 
+        cout << "|| 4. Post Event Announcement                      ||\n"; 
+        cout << "|| 5. Borrow Venue for Event                       ||\n";
+        cout << "|| 6. Monitor Ticket/Booth/Session Activity        ||\n"; 
+        cout << "|| 7. Generate Reports                             ||\n"; 
+        cout << "|| 8. View Sessions                                ||\n"; 
+        cout << "|| 9. Manage Feedbacks                             ||\n"; 
+        cout << "|| 10. Search Users/Events                         ||\n"; 
+        cout << "|| 0. Logout                                       ||\n";
+        cout << "=====================================================\n";
+        cout << "Choice: ";
+
+        string choice;
+        getline(cin, choice);
+
+        if (choice == "1") {
+
+        }
+        else if (choice == "2") {
+
+        }
+        else if (choice == "3") {
+
+        }
+        else if (choice == "4") {
+
+        }
+        else if (choice == "5") {
+
+        }
+        else if (choice == "6") {
+
+        }
+        else if (choice == "7") {
+
+        }
+        else if (choice == "8") {
+
+        }
+        else if (choice == "9") {
+
+        }
+        else if (choice == "10") {
+
+        }
+        else if (choice == "0") {
+            cout << "Logging out...\n";
+            break;
+        } else cout << "Invalid choice.\n";
+    }
+}
 
 // ==========================
 // MENUS
@@ -542,6 +707,7 @@ void mainMenu() {
             string attendeeEmail = login(credentials, "Attendee");
             if(attendeeEmail != "") {
                 Attendee attendee = findAttendee(attendeeEmail);
+                attendeeDashboard(attendee);
 
             }
 
@@ -549,6 +715,7 @@ void mainMenu() {
             string exhibitorEmail = login(credentials, "Exhibitor");
             if(exhibitorEmail != "") {
                 Exhibitor exhibitor = findExhibitor(exhibitorEmail);
+                exhibitorDashboard(exhibitor);
 
             }
 
@@ -556,6 +723,7 @@ void mainMenu() {
             string adminEmail = login(credentials, "Admin");
             if(adminEmail != "") {
                 Admin admin = findAdmin(adminEmail);
+                adminDashboard(admin);
             }
 
         }else if (choice == "4") signUp(credentials);
