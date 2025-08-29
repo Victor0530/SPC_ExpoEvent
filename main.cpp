@@ -1,12 +1,35 @@
 #include <iostream>
-#include <iomanip>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <regex>
 #include <limits>
+#include <sstream>
 
 using namespace std;
+
+// ==========================
+// STRUCT DEFINITIONS
+// ==========================
+struct Attendee {
+    string id;
+    string name;
+    string email;
+    string password;
+};
+
+struct Exhibitor {
+    string id;
+    string companyName;
+    string email;
+    string password;
+};
+
+struct Admin {
+    string email;
+    string password;
+};
 
 struct UserCredential {
     string email;
@@ -14,7 +37,7 @@ struct UserCredential {
     string userType;
 };
 
-struct loginDetails {
+struct LoginDetails {
     string email;
     string password;
 };
@@ -26,310 +49,200 @@ struct Announcement {
     string content;
 };
 
-void clearInputBuffer();
-bool isValidEmail(const string&);
-void loadCredentials(vector<UserCredential>&);
-void initializeUserDatabase(vector<UserCredential>&);
-void signUp(vector<UserCredential>&);
-bool attendeeLogin(vector<UserCredential>&);
-bool exhibitorLogin(vector<UserCredential>&);
-bool adminLogin(vector<UserCredential>&);
-void mainLogo();
-void mainMenu();
-bool adminMenu();
-bool adminSelection();
-void AnnouncementSelection();
-void loadAnnouncements(vector<Announcement>&);
-void saveAnnouncements(const vector<Announcement>&);
-void postAnnouncement(vector<Announcement>&);
-void editAnnouncement(vector<Announcement>&);
-void deleteAnnouncement(vector<Announcement>&);
-void viewAnnouncement(const vector<Announcement>&, const string&);
-
-bool adminMenu() {
-    
-    return adminSelection();
+// ==========================
+// HELPER FUNCTIONS
+// ==========================
+void clearInputBuffer() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
-bool adminSelection() {
-    vector<string> adminOption = {
-        "Announcement",
-        "Function 1",
-        "Function 2",
-        "Function 3",
-        "Back to Login Screen"
-    };
+bool isValidEmail(const string &email) {
+    const regex pattern(R"(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)");
+    return regex_match(email, pattern);
+}
 
+int getValidatedChoice(int min, int max) {
+    int choice;
     while (true) {
-        
-        cout << "======================================\n";
-        cout << "||          Admin Menu              ||\n";
-        cout << "======================================\n";
-        for (int i = 0; i < adminOption.size(); i++) {
-            cout << "||" << setw(2) << i + 1 << ". " << left << setw(30) << adminOption[i] << "||\n";
-        }
-        cout << "======================================\n";
-        cout << "Option ->";
-        int adminInput;
-        cin >> adminInput;
+        cout << "Choice: ";
 
-        if (cin.fail()) {
+        if (!(cin >> choice)) {
+            // Input is not an integer
             cin.clear();
-            clearInputBuffer();
-            cout << "Invalid input. Please enter a number.\n";
-            cout << "Press Enter to continue...\n";
-            cin.get();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a number between " << min << " and " << max << ".\n\n";
             continue;
         }
 
-        clearInputBuffer();
-        switch (adminInput) {
-        case 1:
-            AnnouncementSelection();
-            break;
-        case 2:
-            
-            cout << "======================================\n";
-            cout << "||           Function 1             ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...       ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
-        case 3:
-            
-            cout << "======================================\n";
-            cout << "||           Function 2             ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...       ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
-        case 4:
-            
-            cout << "======================================\n";
-            cout << "||           Function 3             ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...       ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
-        case 5:
-            
-            return true;
-        default:
-            cout << "Invalid input entered, please try again!!!!\n";
-            cout << "Press Enter to continue...\n";
-            cin.get();
-            break;
+        if (choice < min || choice > max) {
+            cout << "Invalid choice. Please enter a number between " << min << " and " << max << ".\n\n";
+            continue;
         }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear leftover newline
+        return choice;
     }
-    return false;
 }
 
-bool attendeeMenu() {
-    vector<string> attendeeOption = {
-        "View Announcements",
-        "Attendee Function 1",
-        "Attendee Function 2",
-        "Back to Login Screen"
-    };
 
-    vector<Announcement> announcements;
-    loadAnnouncements(announcements);
+string generateNextID(const string &filename, char prefix) {
+    ifstream inFile(filename);
+    string line;
+    int maxNum = 0;
 
-    while (true) {
-        
-        cout << "======================================\n";
-        cout << "||         Attendee Menu            ||\n";
-        cout << "======================================\n";
-        for (int i = 0; i < attendeeOption.size(); i++) {
-            cout << "||" << setw(2) << i + 1 << ". " << left << setw(30) << attendeeOption[i] << "||\n";
-        }
-        cout << "======================================\n";
-        cout << "   Option -> ";
-        int attendeeInput;
-        cin >> attendeeInput;
-
-        if (cin.fail()) {
-            cin.clear();
-            clearInputBuffer();
-            cout << "|| Invalid input. Please enter a number. ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            continue;
-        }
-
-        clearInputBuffer();
-        switch (attendeeInput) {
-        case 1:
-            viewAnnouncement(announcements, "Attendee");
-            break;
-        case 2:
-            
-            cout << "======================================\n";
-            cout << "||       Attendee Function 1         ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
-        case 3:
-            
-            cout << "======================================\n";
-            cout << "||       Attendee Function 2         ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
-        case 4:
-            
-            return true;
-        default:
-            cout << "|| Invalid input entered, please try again!!!! ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
+    while (getline(inFile, line)) {
+        size_t pos = line.find(',');
+        if (pos != string::npos) {
+            string id = line.substr(0, pos); // first field is always ID
+            if (id[0] == prefix) {
+                try {
+                    int num = stoi(id.substr(1)); // skip prefix
+                    if (num > maxNum) maxNum = num; // keep track of largest number
+                } catch (...) {
+                    // ignore malformed IDs
+                }
+            }
         }
     }
-    return false;
+    inFile.close();
+
+    // Generate next ID
+    int nextNum = maxNum + 1;
+    stringstream ss;
+    ss << prefix << setw(3) << setfill('0') << nextNum;
+    return ss.str();
 }
 
-bool exhibitorMenu() {
-    vector<string> exhibitorOption = {
-        "View Announcements",
-        "Exhibitor Function 1",
-        "Exhibitor Function 2",
-        "Back to Login Screen"
-    };
+// ==========================
+// FILE HANDLING
+// ==========================
+void loadCredentials(vector<UserCredential> &credentials) {
+    credentials.clear();
 
-    vector<Announcement> announcements;
-    loadAnnouncements(announcements);
+    string line;
 
-    while (true) {
-        
-        cout << "======================================\n";
-        cout << "||        Exhibitor Menu            ||\n";
-        cout << "======================================\n";
-        for (int i = 0; i < exhibitorOption.size(); i++) {
-            cout << "||" << setw(2) << i + 1 << ". " << left << setw(30) << exhibitorOption[i] << "||\n";
+    // ===== Load Attendees =====
+    ifstream inFile("attendees.txt");
+    if (!inFile.is_open()) {
+        cout << "Could not open attendees.txt" << endl;
+    } else {
+        while (getline(inFile, line)) {
+            stringstream ss(line);
+            string id, name, email, password;
+
+            if (getline(ss, id, ',') &&
+                getline(ss, name, ',') &&
+                getline(ss, email, ',') &&
+                getline(ss, password)) 
+            {
+                credentials.push_back({email, password, "Attendee"});
+            }
         }
-        cout << "======================================\n";
-        cout << "Option ->";
-        int exhibitorInput;
-        cin >> exhibitorInput;
-
-        if (cin.fail()) {
-            cin.clear();
-            clearInputBuffer();
-            cout << "|| Invalid input. Please enter a number. ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            continue;
-        }
-
-        clearInputBuffer();
-        switch (exhibitorInput) {
-        case 1:
-            viewAnnouncement(announcements, "Exhibitor");
-            break;
-        case 2:
-            
-            cout << "======================================\n";
-            cout << "||       Exhibitor Function 1        ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
-        case 3:
-            
-            cout << "======================================\n";
-            cout << "||       Exhibitor Function 2        ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
-        case 4:
-            
-            return true;
-        default:
-            cout << "|| Invalid input entered, please try again!!!! ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            break;
-        }
+        inFile.close();
     }
-    return false;
+
+    // ===== Load Exhibitors =====
+    inFile.open("exhibitors.txt");
+    if (!inFile.is_open()) {
+        cout << "Could not open exhibitors.txt" << endl;
+    } else {
+        while (getline(inFile, line)) {
+            stringstream ss(line);
+            string id, companyName, email, password;
+
+            if (getline(ss, id, ',') &&
+                getline(ss, companyName, ',') &&
+                getline(ss, email, ',') &&
+                getline(ss, password)) 
+            {
+                credentials.push_back({email, password, "Exhibitor"});
+            }
+        }
+        inFile.close();
+    }
+
+    // ===== Load Admins =====
+    inFile.open("admins.txt");
+    if (!inFile.is_open()) {
+        cout << "Could not open admins.txt" << endl;
+    } else {
+        while (getline(inFile, line)) {
+            stringstream ss(line);
+            string email, password;
+
+            if (getline(ss, email, ',') &&
+                getline(ss, password)) 
+            {
+                credentials.push_back({email, password, "Admin"});
+            }
+        }
+        inFile.close();
+    }
 }
 
-void AnnouncementSelection() {
-    vector<string> annc = {
-        "Post Announcement",
-        "Edit Announcement",
-        "Delete Announcement",
-        "View Announcement",
-        "Back"
-    };
-    vector<Announcement> announcements;
-    loadAnnouncements(announcements);
+Attendee findAttendee(string email) {
+    Attendee foundAttendee;
 
-    while (true) {
-        
-        cout << "======================================\n";
-        cout << "||      Announcement Menu           ||\n";
-        cout << "======================================\n";
-        for (int i = 0; i < annc.size(); i++) {
-            cout << "||" << setw(2) << i + 1 << ". " << left << setw(30) << annc[i] << "||\n";
-        }
-        cout << "======================================\n";
-        cout << "Option ->";
-        string input;
-        getline(cin, input);
-        int announceOption;
-        try {
-            announceOption = stoi(input);
-        }
-        catch (...) {
-            cout << "Invalid input. Please enter a number.\n";
-            cout << "Press Enter to continue...\n";
-            cin.get();
-            continue;
-        }
+    ifstream inFile("attendees.txt");
 
-        switch (announceOption) {
-        case 1:
-            postAnnouncement(announcements);
-            break;
-        case 2:
-            editAnnouncement(announcements);
-            break;
-        case 3:
-            deleteAnnouncement(announcements);
-            break;
-        case 4:
-            viewAnnouncement(announcements, "Admin");
-            break;
-        case 5:
-            
-            return;
-        default:
-            cout << "Invalid input entered, please try again!!!!\n";
-            cout << "Press Enter to continue...\n";
-            cin.get();
-            break;
+    string line;
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Attendee a;
+        getline(ss, a.id, ',');
+        getline(ss, a.name, ',');
+        getline(ss, a.email, ',');
+        getline(ss, a.password, ',');
+
+        if(a.email == email) {
+            foundAttendee = a;
         }
     }
+
+    return foundAttendee;
+}
+
+Exhibitor findExhibitor(string email) {
+    Exhibitor foundExhibitor;
+
+    ifstream inFile("exhibitors.txt");
+
+    string line;
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Exhibitor e;
+        getline(ss, e.id, ',');
+        getline(ss, e.companyName, ',');
+        getline(ss, e.email, ',');
+        getline(ss, e.password, ',');
+
+        if(e.email == email) {
+            foundExhibitor = e;
+        }
+    }
+
+    return foundExhibitor;
+}
+
+Admin findAdmin(string email) {
+    Admin foundAdmin;
+
+    ifstream inFile("admins.txt");
+
+    string line;
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Admin ad;
+        getline(ss, ad.email, ',');
+        getline(ss, ad.password, ',');
+
+        if(ad.email == email) {
+            foundAdmin = ad;
+        }
+    }
+
+    return foundAdmin;
 }
 
 void loadAnnouncements(vector<Announcement>& announcements) {
@@ -358,21 +271,284 @@ void loadAnnouncements(vector<Announcement>& announcements) {
 
 void saveAnnouncements(const vector<Announcement>& announcements) {
     ofstream outFile("announcements.txt");
-    if (!outFile.is_open()) {
-        cout << "======================================\n";
-        cout << "||Error: Could not save announcements.||\n";
-        cout << "======================================\n";
-        return;
-    }
-    for (const auto& ann : announcements) {
-        outFile << ann.index << "," << ann.userType << "," << ann.title << "," << ann.content << "\n";
+    for (const auto& a : announcements) {
+        outFile << a.index << "," << a.userType << "," << a.title << "," << a.content << "\n";
     }
     outFile.close();
 }
 
-void postAnnouncement(vector<Announcement>& announcements) {
-    
+// ==========================
+// LOGIN MODULE
+// ==========================
+string login(vector<UserCredential> &credentials, const string &role) {
+    const int maxAttempts = 3;
+    int attempts = 0;
+
+    while (attempts < maxAttempts) {
+        cout << "============================================\n";
+        cout << "||     " << right << setw(13) << role << " Login Page           ||\n";
+        cout << "============================================\n";
+        LoginDetails user;
+        cout << "Enter email: ";
+        getline(cin, user.email);
+        cout << "Enter password: ";
+        getline(cin, user.password);
+
+        for (auto &cred : credentials) {
+            if (cred.userType == role && cred.email == user.email && cred.password == user.password) {
+                cout << "\n============================================\n";
+                cout << "||  Login successful! Welcome, " << left << setw(10) << role << " ||\n";
+                cout << "============================================\n";
+                return user.email;
+            }
+        }
+        cout << "\nInvalid credentials. Attempts left: " << maxAttempts - attempts - 1 << "\n";
+        attempts++;
+    }
+    cout << "===============================================\n";
+    cout << "||" << right << setw(10) << role << " login failed after 3 attempts   ||\n";
+    cout << "===============================================\n";
+    return "";
+}
+
+// ==========================
+// SIGN UP MODULE
+// ==========================
+void signUp(vector<UserCredential> &credentials) {
+
+    const string adminVerificationPassword = "secureAdmin123";
+    int choice;
+
+    while (true)
+    {
+        cout << "=======================================================\n";
+        cout << "||                    Sign Up Menu                   ||\n";
+        cout << "=======================================================\n";
+        cout << "|| Register as:                                      ||\n";
+        cout << "|| 1. Attendee                                       ||\n";
+        cout << "|| 2. Exhibitor                                      ||\n";
+        cout << "|| 3. Admin                                          ||\n";
+        cout << "|| 0. Return to Main Menu                            ||\n";
+        cout << "=======================================================\n";
+        cout << "Choice: ";
+
+        cin >> choice;
+        cout << endl;
+
+        if (cin.fail() || choice < 0 || choice > 3) {
+            cin.clear();
+            clearInputBuffer();
+            cout << "=======================================================\n";
+            cout << "||         Invalid Choice, please try again!          ||\n";
+            cout << "=======================================================\n";
+            cout << "Press Enter to continue...";
+            cin.get();
+        } else {
+            break;
+        }
+        
+    }
     clearInputBuffer();
+
+    // Verify if user has the permission to create an admin account
+    if(choice == 3) {
+        cout << "Enter admin verification password: ";
+        string verificationPassword;
+        getline(cin, verificationPassword);
+        if (verificationPassword != adminVerificationPassword) {
+            cout << "======================================\n";
+            cout << "|| Incorrect admin password.        ||\n";
+            cout << "|| Admin account creation denied.   ||\n";
+            cout << "======================================\n";
+
+            return;
+        }
+
+    }
+
+    if(choice == 1) {
+        // Attendee signup
+        Attendee a;
+
+        // id field (auto generated)
+        a.id = generateNextID("attendees.txt", 'A');
+        cout << "Generated Attendee ID: " << a.id << endl;
+
+        // name field
+        do {
+            cout << "Enter Name: "; getline(cin, a.name);
+
+            if(a.name.empty()) {
+                cout << "\n==================================================\n";
+                cout << "||    Name cannot be empty. Please try again    ||\n";
+                cout << "==================================================\n\n";
+            }
+        } while (a.name.empty());
+
+
+        // email field
+        while(true) {
+            bool emailExists = false;
+            cout << "Enter Email: "; getline(cin, a.email);
+            if (!isValidEmail(a.email)) {
+                cout << "\n==============================================\n";
+                cout << "||  Invalid email format. Please try again  ||\n";
+                cout << "==============================================\n\n";
+
+            } else {
+                for (const auto& cred : credentials) {
+                    if (cred.email == a.email) {
+                        cout << "\n=======================================================\n";
+                        cout << "|| Email already exists. Please use a different email. ||\n";
+                        cout << "=========================================================\n\n";
+                        emailExists = true;
+                        break;
+                    }
+                }
+
+                if(!emailExists) { break; }
+            }
+        }
+
+        // password field
+        do {
+            cout << "Enter Password: "; getline(cin, a.password);
+
+            if(a.password.empty()) {
+                cout << "\n==================================================\n";
+                cout << "||  Password cannot be empty. Please try again  ||\n";
+                cout << "==================================================\n\n";
+            }
+        } while (a.password.empty());
+        
+        // save to attendees.txt
+        ofstream outFile("attendees.txt", ios::app);
+        outFile << a.id << "," << a.name << "," << a.email << "," << a.password << "\n";
+        outFile.close();
+
+        // save to vector
+        credentials.push_back({a.email, a.password, "Attendee"});
+        cout << "\nAttendee account created successfully!\n";
+    
+    } else if(choice == 2) {
+        // Exhibitor signup
+        Exhibitor e;
+
+        // id field (auto generated)
+        e.id = generateNextID("exhibitors.txt", 'E');
+        cout << "Generated Exhibitor ID: " << e.id << endl;
+
+        // company name field
+        do {
+            cout << "Enter Company Name: "; getline(cin, e.companyName);
+
+            if(e.companyName.empty()) {
+                cout << "\n====================================================\n";
+                cout << "|| Company name cannot be empty. Please try again ||\n";
+                cout << "====================================================\n\n";
+            }
+        } while (e.companyName.empty());
+        
+        // email field
+        while(true) {
+            bool emailExists = false;
+            cout << "Enter Email: "; getline(cin, e.email);
+            if (!isValidEmail(e.email)) {
+                cout << "\n==============================================\n";
+                cout << "||  Invalid email format. Please try again  ||\n";
+                cout << "==============================================\n\n";
+
+            } else {
+                for (const auto& cred : credentials) {
+                    if (cred.email == e.email) {
+                        cout << "\n=======================================================\n";
+                        cout << "|| Email already exists. Please use a different email. ||\n";
+                        cout << "=========================================================\n\n";
+                        emailExists = true;
+                        break;
+                    }
+                }
+
+                if(!emailExists) { break; }
+            }
+        }
+            
+        // password field
+        do {
+            cout << "Enter Password: "; getline(cin, e.password);
+
+            if(e.password.empty()) {
+            cout << "\n==================================================\n";
+            cout << "||  Password cannot be empty. Please try again  ||\n";
+            cout << "==================================================\n\n";
+            }
+        } while (e.password.empty());
+        
+        // save to exhibitors.txt
+        ofstream outFile("exhibitors.txt", ios::app);
+        outFile << e.id << "," << e.companyName << "," << e.email << "," << e.password << "\n";
+        outFile.close();
+
+        // save to vector
+        credentials.push_back({e.email, e.password, "Exhibitor"});
+        cout << "\nExhibitor account created successfully!\n";
+
+    } else if(choice == 3) {
+        // Admin signup
+        Admin admin;
+
+        // email field
+        while(true) {
+            bool emailExists = false;
+            cout << "Enter Email: "; getline(cin, admin.email);
+            if (!isValidEmail(admin.email)) {
+                cout << "\n==============================================\n";
+                cout << "||  Invalid email format. Please try again  ||\n";
+                cout << "==============================================\n\n";
+
+            } else {
+                for(const auto& cred : credentials) {
+                    if (cred.email == admin.email) {
+                        cout << "\n=======================================================\n";
+                        cout << "|| Email already exists. Please use a different email. ||\n";
+                        cout << "=========================================================\n\n";
+                        emailExists = true;
+                        break;
+                    }
+                }
+                if(!emailExists) { break; }
+            }
+        }
+
+        // password field
+        do {
+            cout << "Enter Password: "; getline(cin, admin.password);
+
+            if(admin.password.empty()) {
+            cout << "\n==================================================\n";
+            cout << "||  Password cannot be empty. Please try again  ||\n";
+            cout << "==================================================\n\n";
+            }
+        } while (admin.password.empty());
+
+        // save to admins.txt
+        ofstream outFile("admins.txt", ios::app);
+        outFile << admin.email << "," << admin.password << "\n";
+        outFile.close();
+
+        // save to vector
+        credentials.push_back({admin.email, admin.password, "Admin"});
+        cout << "\nAdmin account created successfully!\n";
+
+    }
+}
+
+// ==========================
+// MARKETING MODULE (ANNOUNCEMENT)
+// ==========================
+void postAnnouncement(vector<Announcement>& announcements) {
+    Announcement a;
+
     cout << "======================================\n";
     cout << "||        Post Announcement         ||\n";
     cout << "======================================\n";
@@ -382,60 +558,67 @@ void postAnnouncement(vector<Announcement>& announcements) {
     cout << "|| 3. Both                          ||\n";
     cout << "|| 0. Back                          ||\n";
     cout << "======================================\n";
-    cout << "Option ->";
-    string input;
-    getline(cin, input);
 
-    if (input == "0") {
-        
-        return;
+    int choice = getValidatedChoice(0, 3); 
+
+    if(choice == 0) return;
+    else if (choice == 1) a.userType = "Attendee";
+    else if (choice == 2) a.userType = "Exhibitor";
+    else a.userType = "Both";
+
+    while(true)
+    {
+        cout << "Enter title (Maximum 20 Characters): ";
+        getline(cin, a.title);
+
+        if(a.title == "") {
+            cout << "Title cannot be empty. Please try again.\n\n";
+        } else {
+            if(a.title.length() <= 20) {
+                break;
+            } else {
+                cout << "Title has more than 20 characters. Please try again.\n\n";
+            }
+        }
+
     }
 
-    int userTypeOption;
-    try {
-        userTypeOption = stoi(input);
-    }
-    catch (...) {
-        cout << "Invalid input. Returning to announcement menu.\n";
-        cout << "Press Enter to continue...\n";
-        cin.get();
-        
-        return;
-    }
-
-    if (userTypeOption < 1 || userTypeOption > 3) {
-        cout << "Invalid option. Returning to announcement menu.\n";
-        cout << "|| Press Enter to continue...        ||\n";
-        cin.get();
-        
-        return;
-    }
-
-    Announcement newAnn;
-    int maxIndex = 0;
-    for (const auto& ann : announcements) {
-        if (ann.index > maxIndex) maxIndex = ann.index;
-    }
-    newAnn.index = maxIndex + 1;
-
-    if (userTypeOption == 1) newAnn.userType = "Attendee";
-    else if (userTypeOption == 2) newAnn.userType = "Exhibitor";
-    else newAnn.userType = "Both";
+    cout << endl;
     
-    cout << "Title:";
-    getline(cin, newAnn.title);
-    cout << "Content:";
-    getline(cin, newAnn.content);
-    cout << "\n======================================\n";
+    while(true)
+    {
+        cout << "Enter content (Maximum 50 Characters): ";
+        getline(cin, a.content);
 
-    announcements.push_back(newAnn);
+        if(a.content == "") {
+            cout << "Content cannot be empty. Please try again.\n\n";
+        } else {
+            if(a.content.length() <= 50) {
+                break;
+            } else {
+                cout << "Content has more than 50 characters. Please try again.\n\n";
+            }
+        }
+
+    }
+
+    // Assign new index
+    int maxIndex = 0;
+    for (auto& an : announcements) {
+        if (an.index > maxIndex) maxIndex = an.index;
+    }
+    a.index = maxIndex + 1;
+
+    announcements.push_back(a);
     saveAnnouncements(announcements);
+
+    cout << "\n======================================\n";
     cout << "||Announcement posted!!!!           ||\n";
     cout << "======================================\n";
     cout << "||Press Enter to continue...        ||\n";
     cout << "======================================\n";
     cin.get();
-    
+
 }
 
 void viewAnnouncement(const vector<Announcement>& announcements, const string& userType) {
@@ -460,81 +643,53 @@ void viewAnnouncement(const vector<Announcement>& announcements, const string& u
         cout << "|| 3. Both                          ||\n";
         cout << "|| 0. Back                          ||\n";
         cout << "======================================\n";
-        cout << "Option ->";
-        string input;
-        getline(cin, input);
-        
+        int choice = getValidatedChoice(0,3);
 
-        if (input == "0") {
-            
-            return;
-        }
+        cout << endl;
 
-        int userTypeOption;
-        try {
-            userTypeOption = stoi(input);
-        }
-        catch (...) {
-            cout << "|| Invalid input. Returning to menu. ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            
-            return;
-        }
-
-        if (userTypeOption < 1 || userTypeOption > 3) {
-            cout << "|| Invalid option.                  ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...       ||\n";
-            cout << "======================================\n";
-            cin.get();
-            
-            return;
-        }
+        if (choice == 0) { return; }
 
         string filterType;
-        if (userTypeOption == 1) filterType = "Attendee";
-        else if (userTypeOption == 2) filterType = "Exhibitor";
+        if (choice == 1) filterType = "Attendee";
+        else if (choice == 2) filterType = "Exhibitor";
         else filterType = "Both";
 
         bool found = false;
-        cout << "||Current Announcements for " << left << setw(10) << filterType << "||\n";
-        cout << "======================================\n\n";
+        cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+        cout << "||               Current Announcements for " << left << setw(13) << filterType << "       ||\n";
+        cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
         for (const auto& ann : announcements) {
             if (ann.userType == filterType || ann.userType == "Both" || filterType == "Both") {
-                cout << "Index: " << left << setw(29) << ann.index << "\n";
-                cout << "User Type: " << left << setw(25) << ann.userType << "\n";
-                cout << "Title: " << left << setw(29) << ann.title << "\n";
-                cout << "Content: " << left << setw(27) << ann.content << "\n\n";
-                cout << "======================================\n\n";
+                cout << "|| Index: " << left << setw(52) << ann.index << " ||\n";
+                cout << "|| User Type: " << left << setw(48) << ann.userType << " ||\n";
+                cout << "|| Title: " << left << setw(52) << ann.title << " ||\n";
+                cout << "|| Content: " << left << setw(50) << ann.content << " ||\n";
+                cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
                 found = true;
             }
         }
         if (!found) {
             cout << "======================================\n";
-            cout << "||No announcements found            ||\n";
+            cout << "||     No announcements found       ||\n";
             cout << "======================================\n";
         }
     }
     else {
         bool found = false;
-        cout << "||Current Announcements for " << left << setw(9) << userType << "||\n";
-        cout << "======================================\n\n";
+        cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+        cout << "||               Current Announcements for " << left << setw(13) << userType << "       ||\n";
+        cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
         for (const auto& ann : announcements) {
             if (ann.userType == userType || ann.userType == "Both") {
-                cout << "Index: " << left << setw(29) << ann.index << "\n";
-                cout << "User Type: " << left << setw(25) << ann.userType << "\n";
-                cout << "Title: " << left << setw(29) << ann.title << "\n";
-                cout << "Content: " << left << setw(27) << ann.content << "\n\n";
-                cout << "======================================\n\n";
+                cout << "|| Title: " << left << setw(52) << ann.title << " ||\n";
+                cout << "|| Content: " << left << setw(50) << ann.content << " ||\n";
+                cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
                 found = true;
             }
         }
         if (!found) {
             cout << "======================================\n";
-            cout << "||No announcements found            ||\n";
+            cout << "||     No announcements found       ||\n";
             cout << "======================================\n";
         }
     }
@@ -564,56 +719,34 @@ void editAnnouncement(vector<Announcement>& announcements) {
     cout << "|| 3. Both                          ||\n";
     cout << "|| 0. Back                          ||\n";
     cout << "======================================\n";
-    cout << "Option ->";
-    string input;
-    getline(cin, input);
-    
+    int choice = getValidatedChoice(0, 3);    
 
-    if (input == "0") {
-        
-        return;
-    }
+    cout << endl;
 
-    int userTypeOption;
-    try {
-        userTypeOption = stoi(input);
-    }
-    catch (...) {
-        cout << "Invalid input. Returning to announcement menu.\n";
-        cout << "Press Enter to continue...\n";
-        cin.get();
-        
-        return;
-    }
-
-    if (userTypeOption < 1 || userTypeOption > 3) {
-        cout << "Invalid option. Returning to announcement menu.\n";
-        cout << "Press Enter to continue...\n";
-        cin.get();
-        
-        return;
-    }
+    if (choice == 0) { return; }
 
     string filterType;
-    if (userTypeOption == 1) filterType = "Attendee";
-    else if (userTypeOption == 2) filterType = "Exhibitor";
+    if (choice == 1) filterType = "Attendee";
+    else if (choice == 2) filterType = "Exhibitor";
     else filterType = "Both";
 
     bool found = false;
-    cout << "||Current Announcements for " << left << setw(9) << filterType << "||\n";
-    cout << "======================================\n\n";
+    cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+    cout << "||               Current Announcements for " << left << setw(13) << filterType << "       ||\n";
+    cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
     for (const auto& ann : announcements) {
         if (ann.userType == filterType || ann.userType == "Both" || filterType == "Both") {
-            cout << "Index: " << left << setw(29) << ann.index << "\n";
-            cout << "User Type: " << left << setw(25) << ann.userType << "\n";
-            cout << "Title: " << left << setw(29) << ann.title << "\n";
-            cout << "Content: " << left << setw(27) << ann.content << "\n";
-            cout << "\n======================================\n\n";
+            cout << "|| Index: " << left << setw(52) << ann.index << " ||\n";
+            cout << "|| User Type: " << left << setw(48) << ann.userType << " ||\n";
+            cout << "|| Title: " << left << setw(52) << ann.title << " ||\n";
+            cout << "|| Content: " << left << setw(50) << ann.content << " ||\n";
+            cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
             found = true;
         }
     }
     if (!found) {
-        cout << "||No announcements found            ||\n";
+        cout << "======================================\n";
+        cout << "||     No announcements found       ||\n";
         cout << "======================================\n";
         cout << "|| Press Enter to continue...       ||\n";
         cout << "======================================\n";
@@ -622,25 +755,24 @@ void editAnnouncement(vector<Announcement>& announcements) {
         return;
     }
 
-    cout << "\nEnter the index of the announcement to edit (or 0 to go back): ";
-    getline(cin, input);
-
-    if (input == "0") {
-        
-        return;
-    }
-
     int index;
-    try {
-        index = stoi(input);
+
+    while (true) {
+        cout << "\nEnter the index of the announcement to edit (or 0 to go back): ";
+
+        if (!(cin >> index)) {
+            // Input is not an integer
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid index. Please enter a valid number.\n\n";
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear leftover newline
+        break;
     }
-    catch (...) {
-        cout << "\nInvalid input. Returning to announcement menu.\n";
-        cout << "Press Enter to continue...\n";
-        cin.get();
-        
-        return;
-    }
+
+    if (index == 0) { return; }
 
     for (auto& ann : announcements) {
         if (ann.index == index && (ann.userType == filterType || ann.userType == "Both" || filterType == "Both")) {
@@ -654,20 +786,20 @@ void editAnnouncement(vector<Announcement>& announcements) {
                 else if (newUserType == "3") ann.userType = "Both";
             }
             
-            cout << "\nEnter new title (leave blank to keep current): ";
+            cout << "\nEnter new title (Maximum 20 Characters, leave blank to keep current): ";
             string newTitle;
             getline(cin, newTitle);
             if (!newTitle.empty()) {
                 ann.title = newTitle;
             }
-            cout << "\nEnter new content (leave blank to keep current): ";
+            cout << "\nEnter new content (Maximum 50 Characters, leave blank to keep current): ";
             string newContent;
             getline(cin, newContent);
             if (!newContent.empty()) {
                 ann.content = newContent;
             }
-            cout << "\n======================================\n";
             saveAnnouncements(announcements);
+            cout << "\n======================================\n";
             cout << "||Announcement updated successfully! ||\n";
             cout << "======================================\n";
             cout << "|| Press Enter to continue...        ||\n";
@@ -677,10 +809,11 @@ void editAnnouncement(vector<Announcement>& announcements) {
             return;
         }
     }
-    cout << "|| Announcement not found           ||\n";
-    cout << "======================================\n";
-    cout << "|| Press Enter to continue...       ||\n";
-    cout << "======================================\n";
+    cout << "=====================================================\n";
+    cout << "|| Announcement not found, returning to dashboard. ||\n";
+    cout << "=====================================================\n";
+    cout << "|| Press Enter to continue...                      ||\n";
+    cout << "=====================================================\n";
     cin.get();
     
 }
@@ -707,56 +840,34 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
     cout << "|| 0. Back                          ||\n";
     cout << "======================================\n";
     cout << "Option ->";
-    string input;
-    getline(cin, input);
-    
+    int choice = getValidatedChoice(0, 3);    
 
-    if (input == "0") {
-        
-        return;
-    }
+    cout << endl;
 
-    int userTypeOption;
-    try {
-        userTypeOption = stoi(input);
-    }
-    catch (...) {
-        cout << "Invalid input. Returning to announcement menu.\n";
-        cout << "Press Enter to continue...\n";
-        cin.get();
-        
-        return;
-    }
-
-    if (userTypeOption < 1 || userTypeOption > 3) {
-        cout << "Invalid option. Returning to announcement menu.\n";
-        cout << "Press Enter to continue...\n";
-        cin.get();
-        
-        return;
-    }
+    if (choice == 0) { return; }
 
     string filterType;
-    if (userTypeOption == 1) filterType = "Attendee";
-    else if (userTypeOption == 2) filterType = "Exhibitor";
+    if (choice == 1) filterType = "Attendee";
+    else if (choice == 2) filterType = "Exhibitor";
     else filterType = "Both";
 
     bool found = false;
-    cout << "||Current Announcements for " << left << setw(9) << filterType << "||\n";
-    cout << "======================================\n\n";
+    cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+    cout << "||               Current Announcements for " << left << setw(13) << filterType << "       ||\n";
+    cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
     for (const auto& ann : announcements) {
         if (ann.userType == filterType || ann.userType == "Both" || filterType == "Both") {
-            cout << "Index: " << left << setw(29) << ann.index << "\n";
-            cout << "User Type: " << left << setw(25) << ann.userType << "\n";
-            cout << "Title: " << left << setw(29) << ann.title << "\n";
-            cout << "Content: " << left << setw(27) << ann.content << "\n";
-            cout << "\n======================================\n\n";
+            cout << "|| Index: " << left << setw(52) << ann.index << " ||\n";
+            cout << "|| User Type: " << left << setw(48) << ann.userType << " ||\n";
+            cout << "|| Title: " << left << setw(52) << ann.title << " ||\n";
+            cout << "|| Content: " << left << setw(50) << ann.content << " ||\n";
+            cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
             found = true;
         }
     }
     if (!found) {
         cout << "======================================\n";
-        cout << "|| No announcements found           ||\n";
+        cout << "||     No announcements found       ||\n";
         cout << "======================================\n";
         cout << "|| Press Enter to continue...       ||\n";
         cout << "======================================\n";
@@ -765,26 +876,24 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
         return;
     }
 
-    cout << "\nEnter the index of the announcement to delete (or 0 to go back): ";
-    getline(cin, input);
-    
-
-    if (input == "0") {
-        
-        return;
-    }
-
     int index;
-    try {
-        index = stoi(input);
+
+    while (true) {
+        cout << "\nEnter the index of the announcement to delete (or 0 to go back): ";
+
+        if (!(cin >> index)) {
+            // Input is not an integer
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid index. Please enter a valid number.\n\n";
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear leftover newline
+        break;
     }
-    catch (...) {
-        cout << "Invalid input. Returning to announcement menu.\n";
-        cout << "|| Press Enter to continue...        ||\n";
-        cin.get();
-        
-        return;
-    }
+
+    if (index == 0) { return; }
 
     for (auto it = announcements.begin(); it != announcements.end(); ++it) {
         if (it->index == index && (it->userType == filterType || it->userType == "Both" || filterType == "Both")) {
@@ -809,587 +918,292 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
     
 }
 
-void clearInputBuffer() {
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-}
 
-bool isValidEmail(const string& email) {
-    const regex pattern(R"(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)");
-    return regex_match(email, pattern);
-}
+void adminAnnouncementSelection(vector<Announcement> &announcements) {
+    cout << "======================================\n";
+    cout << "||        Announcement Menu         ||\n";
+    cout << "======================================\n";
+    cout << "|| 1. Post Announcement             ||\n";
+    cout << "|| 2. Edit Announcement             ||\n";
+    cout << "|| 3. Delete Announcement           ||\n";
+    cout << "|| 4. View Announcement             ||\n";
+    cout << "|| 0. Back                          ||\n";
+    cout << "======================================\n";
 
-void loadCredentials(vector<UserCredential>& credentials) {
-    credentials.clear();
-    vector<pair<string, string>> files = {
-        {"attendees.txt", "Attendee"},
-        {"exhibitors.txt", "Exhibitor"},
-        {"admins.txt", "Admin"}
-    };
+    int choice = getValidatedChoice(0, 4);
 
-    for (const auto& file : files) {
-        ifstream inFile(file.first);
-        if (!inFile.is_open()) {
-            cout << "======================================\n";
-            cout << "|| Warning: Could not open " << left << setw(10) << file.first << "||\n";
-            cout << "======================================\n";
-            continue;
-        }
-        string line;
-        while (getline(inFile, line)) {
-            size_t delimiterPos = line.find(',');
-            if (delimiterPos != string::npos && !line.empty()) {
-                UserCredential cred;
-                cred.email = line.substr(0, delimiterPos);
-                cred.password = line.substr(delimiterPos + 1);
-                cred.userType = file.second;
-                credentials.push_back(cred);
-            }
-        }
-        inFile.close();
+    switch (choice)
+    {
+        case 1: postAnnouncement(announcements); break;
+        case 2: editAnnouncement(announcements); break;
+        case 3: deleteAnnouncement(announcements); break;
+        case 4: viewAnnouncement(announcements, "Admin"); break;
+        case 0: return;
     }
 }
 
-void initializeUserDatabase(vector<UserCredential>& credentials) {
-    ifstream attendeeCheck("attendees.txt");
-    if (!attendeeCheck.good()) {
-        ofstream attendeeFile("attendees.txt");
-        attendeeFile << "lmao@gmail.com,abcdefg\n";
-        attendeeFile << "yes@gmail.com,123456789\n";
-        attendeeFile.close();
-    }
+// ==========================
+// PROFILE DASHBOARD
+// ==========================
+void attendeeDashboard(Attendee &a, vector<Announcement> &annc) {
+    while (true) {
+        cout << "\n=====================================================\n";
+        cout << "||               Attendee Dashboard                ||\n";
+        cout << "=====================================================\n";
+        cout << "|| 1. View Profile                                 ||\n";
+        cout << "|| 2. Update Profile                               ||\n";
+        cout << "|| 3. Delete Account                               ||\n";
+        cout << "|| 4. View Event Announcements                     ||\n";
+        cout << "|| 5. Purchase Tickets                             ||\n";
+        cout << "|| 6. View Purchased Tickets                       ||\n";
+        cout << "|| 7. Submit Feedbacks                             ||\n";
+        cout << "|| 0. Logout                                       ||\n";
+        cout << "=====================================================\n";
+        cout << "Choice: ";
 
-    ifstream exhibitorCheck("exhibitors.txt");
-    if (!exhibitorCheck.good()) {
-        ofstream exhibitorFile("exhibitors.txt");
-        exhibitorFile << "exhibitor1@gmail.com,pass123\n";
-        exhibitorFile << "exhibitor2@gmail.com,pass456\n";
-        exhibitorFile.close();
-    }
+        string choice;
+        getline(cin, choice);
 
-    ifstream adminCheck("admins.txt");
-    if (!adminCheck.good()) {
-        ofstream adminFile("admins.txt");
-        adminFile << "admin1@gmail.com,adminpass1\n";
-        adminFile << "admin2@gmail.com,adminpass2\n";
-        adminFile.close();
+        if (choice == "1") {
+            
+        }
+        else if (choice == "2") {
+            
+        }
+        else if (choice == "3") {
+            
+        }
+        else if (choice == "4") { // view annc
+            viewAnnouncement(annc, "Attendee");
+        }
+        else if (choice == "5") {
+            
+        }
+        else if (choice == "6") {
+            
+        }
+        else if (choice == "7") {
+            
+        }
+        else if (choice == "0") {
+            cout << "Logging out...\n";
+            break;
+        } else cout << "Invalid choice.\n";
     }
-
-    loadCredentials(credentials);
 }
 
-void signUp(vector<UserCredential>& credentials) {
-    
-    vector<string> newAcc = { "Attendee", "Exhibitor", "Admin", "Back to Main Menu" };
-    const string adminVerificationPassword = "secureAdmin123";
+void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc) {
+    while (true) {
+        cout << "\n=====================================================\n";
+        cout << "||               Exhibitor Dashboard               ||\n";
+        cout << "=====================================================\n";
+        cout << "|| 1. View Profile                                 ||\n";
+        cout << "|| 2. Update Profile                               ||\n";
+        cout << "|| 3. Delete Account                               ||\n";
+        cout << "|| 4. View Event Announcements                     ||\n";
+        cout << "|| 5. Book Booths                                  ||\n";
+        cout << "|| 6. Manage Booth Details                         ||\n";
+        cout << "|| 7. Monitor Booth/Session Stats                  ||\n";
+        cout << "|| 8. Schedule Sessions                            ||\n";
+        cout << "|| 0. Logout                                       ||\n";
+        cout << "=====================================================\n";
+        cout << "Choice: ";
 
-    cout << "======================================\n";
-    cout << "||         Sign Up Menu             ||\n";
-    cout << "======================================\n";
-    cout << "||Select one of the options below:  ||\n";
-    for (int i = 0; i < newAcc.size(); i++) {
-        cout << "||" << setw(2) << i + 1 << ". " << left << setw(30) << newAcc[i] << "||\n";
-    }
-    cout << "======================================\n";
-    cout << "Option ->";
-    int option;
-    cin >> option;
-    
+        string choice;
+        getline(cin, choice);
 
-    if (cin.fail() || option < 1 || option > 4) {
-        cin.clear();
-        clearInputBuffer();
-        cout << "Invalid option. Returning to main menu.\n";
-        cout << "Press Enter to continue...\n";
-        cin.get();
-        
-        return;
-    }
+        if (choice == "1") {
 
-    if (option == 4) {
-        clearInputBuffer();
-        
-        return;
-    }
-
-    clearInputBuffer();
-
-    loginDetails newUser;
-
-    if (option == 3) {
-        cout << "Enter admin verification password: ";
-        string verificationPassword;
-        getline(cin, verificationPassword);
-        if (verificationPassword != adminVerificationPassword) {
-            cout << "======================================\n";
-            cout << "|| Incorrect admin password.        ||\n";
-            cout << "|| Admin account creation denied.   ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...       ||\n";
-            cout << "======================================\n";
-            cin.get();
-            
-            return;
         }
-    }
-    cout << "======================================\n";
-    cout << "Enter your email: ";
-    getline(cin, newUser.email);
+        else if (choice == "2") {
 
-    if (!isValidEmail(newUser.email)) {
-        cout << "\n======================================\n";
-        cout << "|| Invalid email format.            ||\n";
-        cout << "======================================\n";
-        cout << "|| Press Enter to continue...       ||\n";
-        cout << "======================================\n";
-        cin.get();
-        
-        return;
-    }
-
-    for (const auto& cred : credentials) {
-        if (cred.email == newUser.email) {
-            cout << "\n=======================================================\n";
-            cout << "|| Email already exists. Please use a different email. ||\n";
-            cout << "=========================================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            
-            return;
         }
+        else if (choice == "3") {
+
+        }
+        else if (choice == "4") { // view annc
+            viewAnnouncement(annc, "Exhibitor");
+        }
+        else if (choice == "5") {
+
+        }
+        else if (choice == "6") {
+
+        }
+        else if (choice == "7") {
+
+        }
+        else if (choice == "8") {
+
+        }
+        else if (choice == "0") {
+            cout << "Logging out...\n";
+            break;
+        } else cout << "Invalid choice.\n";
     }
-
-    cout << "Enter your password:";
-    getline(cin, newUser.password);
-    cout << "======================================\n";
-
-    string fileName;
-    if (option == 1) fileName = "attendees.txt";
-    else if (option == 2) fileName = "exhibitors.txt";
-    else if (option == 3) fileName = "admins.txt";
-
-    ofstream outFile(fileName, ios::app);
-    if (!outFile.is_open()) {
-        cout << "|| Error: Could not open " << left << setw(10) << fileName << " for writing. ||\n";
-        cout << "======================================\n";
-        cout << "|| Press Enter to continue...        ||\n";
-        cout << "======================================\n";
-        cin.get();
-        
-        return;
-    }
-    outFile << newUser.email << "," << newUser.password << "\n";
-    outFile.close();
-
-    UserCredential newCred;
-    newCred.email = newUser.email;
-    newCred.password = newUser.password;
-    newCred.userType = newAcc[option - 1];
-    credentials.push_back(newCred);
-
-    cout << "\n" << left << setw(2) << newAcc[option - 1] << " account created successfully!\n";
-    cout << "Press Enter to continue...\n";
-    cin.get();
-    
 }
 
-bool attendeeLogin(vector<UserCredential>& credentials) {
-    const int maxAttempts = 3;
-    int attempts = 0;
-    bool showError = false;
+void adminDashboard(Admin &ad, vector<Announcement> &annc) {
 
-    while (attempts < maxAttempts) {
-        
-        loginDetails user;
+    while (true) {
+        cout << "\n=====================================================\n";
+        cout << "||                 Admin Dashboard                 ||\n";
+        cout << "=====================================================\n";
+        cout << "|| 1. View Profile                                 ||\n"; 
+        cout << "|| 2. Update Profile                               ||\n"; 
+        cout << "|| 3. Manage Event Announcements                   ||\n"; 
+        cout << "|| 4. Borrow Venue for Event                       ||\n";
+        cout << "|| 5. Monitor Ticket/Booth/Session Activity        ||\n"; 
+        cout << "|| 6. Generate Reports                             ||\n"; 
+        cout << "|| 7. View Sessions                                ||\n"; 
+        cout << "|| 8. Manage Feedbacks                             ||\n"; 
+        cout << "|| 9. Search Users/Events                          ||\n"; 
+        cout << "|| 0. Logout                                       ||\n";
+        cout << "=====================================================\n";
+        cout << "Choice: ";
 
-        cout << "======================================\n";
-        cout << "||         Attendee Login           ||\n";
-        cout << "======================================\n";
-        cout << "Attempt " << (attempts + 1) << " of " << maxAttempts << "\n";
-        if (showError) {
-            cout << "Invalid email format. Please enter a valid email.\n";
+        string choice;
+        getline(cin, choice);
+
+        if (choice == "1") {
+
         }
-        cout << "Enter your attendee email:";
-        getline(cin, user.email);
+        else if (choice == "2") {
 
-        if (!isValidEmail(user.email)) {
-            cout << "Invalid email format. Please enter a valid email. \n";
-            cout << "Press Enter to continue...        \n";
-            attempts++;
-            showError = true;
-            cin.get();
-            continue;
         }
+        else if (choice == "3") { // Manage Annc
+            adminAnnouncementSelection(annc);
+        }
+        else if (choice == "4") { 
 
-        cout << "Enter your attendee password:";
-        getline(cin, user.password);
+        }
+        else if (choice == "5") {
 
-        bool loginStatus = false;
-        for (const auto& cred : credentials) {
-            if (cred.userType == "Attendee" && cred.email == user.email && cred.password == user.password) {
-                loginStatus = true;
-                break;
-            }
         }
+        else if (choice == "6") {
 
-        if (loginStatus) {
-            cout << "\n======================================\n";
-            cout << "|| Attendee Login Success!!!        ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...       ||\n";
-            cout << "======================================\n";
-            cin.get();
-            
-            return attendeeMenu();
         }
-        else {
-            cout << "Incorrect attendee email or password. Please try again!!!\n";
-            cout << "Press Enter to try again...\n";
-            cin.get();
-            
-            attempts++;
-            showError = false;
+        else if (choice == "7") {
+
         }
+        else if (choice == "8") {
+
+        }
+        else if (choice == "9") {
+
+        }
+        else if (choice == "0") {
+            cout << "Logging out...\n";
+            break;
+        } else cout << "Invalid choice.\n";
     }
-
-    
-    cout << "======================================\n";
-    cout << "|| Too many failed attempts. Attendee login failed. ||\n";
-    cout << "|| Do you want to register a new account? (y/Y/n/N): ";
-    string response;
-    getline(cin, response);
-
-    while (response != "y" && response != "Y" && response != "n" && response != "N") {
-        
-        cout << "======================================\n";
-        cout << "|| Invalid input. Please enter y/Y for yes or n/N for no. ||\n";
-        cout << "|| Do you want to register a new account? (y/Y/n/N): ";
-        getline(cin, response);
-    }
-
-    if (response == "y" || response == "Y") {
-        signUp(credentials);
-
-        
-        cout << "======================================\n";
-        cout << "|| Would you like to try logging in again? (y/Y/n/N): ";
-        getline(cin, response);
-        while (response != "y" && response != "Y" && response != "n" && response != "N") {
-            
-            cout << "======================================\n";
-            cout << "|| Invalid input. Please enter y/Y for yes or n/N for no. ||\n";
-            cout << "|| Would you like to try logging in again? (y/Y/n/N): ";
-            getline(cin, response);
-        }
-        if (response == "y" || response == "Y") {
-            return attendeeLogin(credentials);
-        }
-    }
-
-    
-    return false;
 }
 
-bool exhibitorLogin(vector<UserCredential>& credentials) {
-    const int maxAttempts = 3;
-    int attempts = 0;
-    bool showError = false;
-
-    while (attempts < maxAttempts) {
-        
-        loginDetails exhibitor;
-
-        cout << "======================================\n";
-        cout << "||        Exhibitor Login           ||\n";
-        cout << "======================================\n";
-        cout << "Attempt " << (attempts + 1) << " of " << maxAttempts << "\n";
-        if (showError) {
-            cout << "Invalid email format. Please enter a valid email.\n";
-        }
-        cout << "Enter your exhibitor email:";
-        getline(cin, exhibitor.email);
-
-        if (!isValidEmail(exhibitor.email)) {
-            cout << "Invalid email format. Please enter a valid email.\n";
-            cout << "Press Enter to continue...\n";
-            attempts++;
-            showError = true;
-            cin.get();
-            continue;
-        }
-
-        cout << "Enter your exhibitor password:";
-        getline(cin, exhibitor.password);
-
-        bool loginStatus = false;
-        for (const auto& cred : credentials) {
-            if (cred.userType == "Exhibitor" && cred.email == exhibitor.email && cred.password == exhibitor.password) {
-                loginStatus = true;
-                break;
-            }
-        }
-
-        if (loginStatus) {
-            cout << "\n======================================\n";
-            cout << "|| Exhibitor Login Success!!!       ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...       ||\n";
-            cout << "======================================\n";
-            cin.get();
-            
-            return exhibitorMenu();
-        }
-        else {
-            cout << "Incorrect exhibitor email or password. Please try again!!!\n";
-            cout << "Press Enter to try again...      \n";
-            cin.get();
-            
-            attempts++;
-            showError = false;
-        }
-    }
-
-    
-    cout << "======================================\n";
-    cout << "Too many failed attempts. Exhibitor login failed.\n";
-    cout << "Do you want to register a new account? (y/Y/n/N): ";
-    string response;
-    getline(cin, response);
-
-    while (response != "y" && response != "Y" && response != "n" && response != "N") {
-        
-        cout << "======================================\n";
-        cout << "Invalid input. Please enter y/Y for yes or n/N for no.\n";
-        cout << "Do you want to register a new account? (y/Y/n/N): ";
-        getline(cin, response);
-    }
-
-    if (response == "y" || response == "Y") {
-        signUp(credentials);
-        
-        cout << "======================================\n";
-        cout << "Would you like to try logging in again? (y/Y/n/N): ";
-        getline(cin, response);
-        while (response != "y" && response != "Y" && response != "n" && response != "N") {
-            
-            cout << "======================================\n";
-            cout << "Invalid input. Please enter y/Y for yes or n/N for no.\n";
-            cout << "Would you like to try logging in again? (y/Y/n/N): ";
-            getline(cin, response);
-        }
-        if (response == "y" || response == "Y") {
-            return exhibitorLogin(credentials);
-        }
-    }
-
-    
-    return false;
-}
-
-bool adminLogin(vector<UserCredential>& credentials) {
-    const int maxAttempts = 3;
-    int attempts = 0;
-    bool showError = false;
-
-    while (attempts < maxAttempts) {
-        
-        loginDetails admin;
-
-        cout << "======================================\n";
-        cout << "||          Admin Login             ||\n";
-        cout << "======================================\n";
-        cout << "Attempt " << (attempts + 1) << " of " << maxAttempts << "\n";
-        if (showError) {
-            cout << "Invalid email format. Please enter a valid email.\n";
-        }
-        cout << "Enter your admin email:";
-        getline(cin, admin.email);
-
-        if (!isValidEmail(admin.email)) {
-            cout << "Invalid email format. Please enter a valid email.\n";
-            cout << "Press Enter to continue...\n";
-            attempts++;
-            showError = true;
-            cin.get();
-            continue;
-        }
-
-        cout << "Enter your admin password:";
-        getline(cin, admin.password);
-
-        bool loginStatus = false;
-        for (const auto& cred : credentials) {
-            if (cred.userType == "Admin" && cred.email == admin.email && cred.password == admin.password) {
-                loginStatus = true;
-                break;
-            }
-        }
-
-        if (loginStatus) {
-            cout << "\n======================================\n";
-            cout << "|| Admin Login Success!!!            ||\n";
-            cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
-            
-            if (adminMenu()) {
-                return false;
-            }
-            return true;
-        }
-        else {
-            cout << "Incorrect admin email or password. Please try again!!!\n";
-            cout << "Press Enter to try again...\n";
-            cin.get();
-            
-            attempts++;
-            showError = false;
-        }
-    }
-
-    
-    cout << "======================================\n";
-    cout << "Too many failed attempts. Admin login failed.\n";
-    cout << "Do you want to register a new account? (y/Y/n/N): ";
-    string response;
-    getline(cin, response);
-
-    while (response != "y" && response != "Y" && response != "n" && response != "N") {
-        
-        cout << "======================================\n";
-        cout << "Invalid input. Please enter y/Y for yes or n/N for no.\n";
-        cout << "Do you want to register a new account? (y/Y/n/N): ";
-        getline(cin, response);
-    }
-
-    if (response == "y" || response == "Y") {
-        signUp(credentials);
-
-        
-        cout << "======================================\n";
-        cout << "Would you like to try logging in again? (y/Y/n/N): ";
-        getline(cin, response);
-        while (response != "y" && response != "Y" && response != "n" && response != "N") {
-            
-            cout << "======================================\n";
-            cout << "Invalid input. Please enter y/Y for yes or n/N for no.\n";
-            cout << "Would you like to try logging in again? (y/Y/n/N): ";
-            getline(cin, response);
-        }
-        if (response == "y" || response == "Y") {
-            return adminLogin(credentials);
-        }
-    }
-
-    
-    return false;
-}
-
+// ==========================
+// MENUS
+// ==========================
 void mainLogo() {
     cout << "============================================================\n";
-    cout << "||                       Welcome to                        ||\n";
-    cout << "||          _____                    _____                 ||\n";
-    cout << "||         /\\    \\                  /\\    \\                ||\n";
-    cout << "||        /::\\    \\                /::\\____\\               ||\n";
-    cout << "||       /::::\\    \\              /:::/    /               ||\n";
-    cout << "||      /::::::\\    \\            /:::/    /                ||\n";
-    cout << "||     /:::/\\:::\\    \\          /:::/    /                 ||\n";
-    cout << "||    /:::/  \\:::\\    \\        /:::/____/                  ||\n";
-    cout << "||   /:::/    \\:::\\    \\       ||::|    |                  ||\n";
-    cout << "||  /:::/    / \\:::\\    \\      ||::|    |     _____        ||\n";
-    cout << "|| /:::/    /   \\:::\\    \\     ||::|    |    /\\    \\       ||\n";
-    cout << "||/:::/____/     \\:::\\____\\    ||::|    |   /:::\\____\\     ||\n";
-    cout << "||\\:::\\    \\      \\::/    /    ||::|    |  /:::/    /      ||\n";
-    cout << "|| \\:::\\    \\      \\/____/     ||::|    | /:::/    /       ||\n";
-    cout << "||  \\:::\\    \\                 ||::|____|/:::/    /        ||\n";
-    cout << "||   \\:::\\    \\                ||:::::::::::/    /         ||\n";
-    cout << "||    \\:::\\    \\               \\::::::::::/____/           ||\n";
-    cout << "||     \\:::\\    \\               ~~~~~~~~~~                 ||\n";
-    cout << "||      \\:::\\    \\                                         ||\n";
-    cout << "||       \\:::\\____\\                                        ||\n";
-    cout << "||        \\::/    /                                        ||\n";
-    cout << "||         \\/____/                                         ||\n";
-    cout << "||                                                         ||\n";
+    cout << "||                                                        ||\n";
+    cout << "||          _____                    _____                ||\n";
+    cout << "||         /\\    \\                  /\\    \\               ||\n";
+    cout << "||        /::\\    \\                /::\\____\\              ||\n";
+    cout << "||       /::::\\    \\              /:::/    /              ||\n";
+    cout << "||      /::::::\\    \\            /:::/    /               ||\n";
+    cout << "||     /:::/\\:::\\    \\          /:::/    /                ||\n";
+    cout << "||    /:::/  \\:::\\    \\        /:::/____/                 ||\n";
+    cout << "||   /:::/    \\:::\\    \\       ||::|    |                 ||\n";
+    cout << "||  /:::/    / \\:::\\    \\      ||::|    |     _____       ||\n";
+    cout << "|| /:::/    /   \\:::\\    \\     ||::|    |    /\\    \\      ||\n";
+    cout << "||/:::/____/     \\:::\\____\\    ||::|    |   /:::\\____\\    ||\n";
+    cout << "||\\:::\\    \\      \\::/    /    ||::|    |  /:::/    /     ||\n";
+    cout << "|| \\:::\\    \\      \\/____/     ||::|    | /:::/    /      ||\n";
+    cout << "||  \\:::\\    \\                 ||::|____|/:::/    /       ||\n";
+    cout << "||   \\:::\\    \\                ||:::::::::::/    /        ||\n";
+    cout << "||    \\:::\\    \\               \\::::::::::/____/          ||\n";
+    cout << "||     \\:::\\    \\               ~~~~~~~~~~                ||\n";
+    cout << "||      \\:::\\    \\                                        ||\n";
+    cout << "||       \\:::\\____\\                                       ||\n";
+    cout << "||        \\::/    /                                       ||\n";
+    cout << "||         \\/____/                                        ||\n";
+    cout << "||                                                        ||\n";
     cout << "============================================================\n";
+    cout << "||                       WELCOME TO                       ||\n";
+    cout << "||              EXPO EVENT MANAGEMENT SYSTEM              ||\n";
+    cout << "============================================================\n\n";
+
 }
 
 void mainMenu() {
     vector<UserCredential> credentials;
-    initializeUserDatabase(credentials);
-
-    vector<string> menuTemplate = {
-        "Attendee",
-        "Exhibitor",
-        "Admin",
-        "New User? Sign Up Here!!!",
-        "Exit"
-    };
+    vector<Announcement> announcements;
 
     while (true) {
-        
+        loadCredentials(credentials);
+        loadAnnouncements(announcements);
+
         mainLogo();
-        cout << "|| Please select one of the options below for logins:      ||\n";
         cout << "============================================================\n";
-        for (int i = 0; i < menuTemplate.size(); i++) {
-            cout << "||" << setw(1) << i + 1 << ". " << left << setw(46) << menuTemplate[i] << "        ||\n";
-        }
+        cout << "|| Please select one of the options below for logins:     ||\n";
         cout << "============================================================\n";
-        cout << "Option -> ";
-        int menuOption;
-        cin >> menuOption;
+        cout << "|| 1. Attendee Login                                      ||\n";
+        cout << "|| 2. Exhibitor Login                                     ||\n";
+        cout << "|| 3. Admin Login                                         ||\n";
+        cout << "|| 4. Sign Up                                             ||\n";
+        cout << "|| 0. Exit                                                ||\n";
+        cout << "============================================================\n";
+        cout << "Choice: ";
 
-        if (cin.fail()) {
-            cin.clear();
-            clearInputBuffer();
-            cout << "Invalid input type. Please enter a number.               \n";
-            cout << "Press Enter to continue...                               \n";
-            cin.get();
-            continue;
-        }
+        string choice; getline(cin, choice);
+        cout << endl;
 
-        clearInputBuffer();
-        
-        switch (menuOption) {
-        case 1:
-            cout << "============================================================\n";
-            cout << "|| You have selected " << left << setw(29) << menuTemplate[0] << " login       ||\n";
-            cout << "============================================================\n\n";
-            attendeeLogin(credentials);
-            break;
-        case 2:
-            cout << "============================================================\n";
-            cout << "|| You have selected " << left << setw(29) << menuTemplate[1] << " login       ||\n";
-            cout << "============================================================\n\n";
-            exhibitorLogin(credentials);
-            break;
-        case 3:
-            cout << "============================================================\n";
-            cout << "|| You have selected " << left << setw(29) << menuTemplate[2] << " login       ||\n";
-            cout << "============================================================\n\n";
-            if (!adminLogin(credentials)) {
-                break;
+        if (choice == "1") {
+            string attendeeEmail = login(credentials, "Attendee");
+            if(attendeeEmail != "") {
+                Attendee attendee = findAttendee(attendeeEmail);
+                attendeeDashboard(attendee, announcements);
+
             }
-            break;
-        case 4:
-            signUp(credentials);
-            break;
-        case 5:
+
+        } else if (choice == "2")  {
+            string exhibitorEmail = login(credentials, "Exhibitor");
+            if(exhibitorEmail != "") {
+                Exhibitor exhibitor = findExhibitor(exhibitorEmail);
+                exhibitorDashboard(exhibitor, announcements);
+
+            }
+
+        } else if (choice == "3") {
+            string adminEmail = login(credentials, "Admin");
+            if(adminEmail != "") {
+                Admin admin = findAdmin(adminEmail);
+                adminDashboard(admin, announcements);
+            }
+
+        }else if (choice == "4") signUp(credentials);
+        else if (choice == "0") {
             cout << "============================================================\n";
-            cout << "|| Thank you for using our system!!!                      ||\n";
+            cout << "||     Exiting... Thank you for using the system!         ||\n";
             cout << "============================================================\n";
-            return;
-        default:
-            cout << "Invalid option. Please select a number between 1 and 5. \n";
-            cout << "Press Enter to continue...                        \n";
-            cin.get();
             break;
         }
+        else {
+            cout << "============================================================\n";
+            cout << "||          Invalid Choice, please try again!             ||\n";
+            cout << "============================================================\n";
+        }
+
+        cout << "\nPress Enter to continue...";
+        cin.ignore();
+
     }
 }
 
+// ==========================
+// ENTRY POINT
+// ==========================
 int main() {
     mainMenu();
+    
     return 0;
 }
