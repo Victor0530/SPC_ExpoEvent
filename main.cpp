@@ -544,6 +544,333 @@ void signUp(vector<UserCredential> &credentials) {
 }
 
 // ==========================
+// USER PROFILES
+// ==========================
+void viewAttendeeProfile(Attendee &a) {
+    cout << "\n============================================================\n";
+    cout << "||                   ATTENDEE PROFILE                     ||\n";
+    cout << "============================================================\n";
+    cout << "|| ID        : " << left << setw(43) << a.id << "||\n";
+    cout << "|| Name      : " << left << setw(43) << a.name << "||\n";
+    cout << "|| Email     : " << left << setw(43) << a.email << "||\n";
+    cout << "|| Password  : " << left << setw(43) << a.password << "||\n";
+    cout << "============================================================\n\n";
+}
+
+void updateAttendeeProfile(Attendee &a, vector<UserCredential> &credentials) {
+    viewAttendeeProfile(a);
+
+    cout << "===================================\n";
+    cout << "||  Updating Attendee's Profile  ||\n";
+    cout << "===================================\n\n";
+
+    vector<Attendee> attendees;
+    ifstream inFile("attendees.txt");
+    string line;
+
+    // Load attendees into memory
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Attendee a;
+        getline(ss, a.id, ',');
+        getline(ss, a.name, ',');
+        getline(ss, a.email, ',');
+        getline(ss, a.password);
+        attendees.push_back(a);
+    }
+    inFile.close();
+
+    for(auto &attendee : attendees) {
+        if(attendee.email == a.email) {
+            cout << "Enter new name (leave blank to keep current): ";
+            string newName; getline(cin, newName);
+            if(!newName.empty()) {
+                a.name = newName;
+                attendee.name = newName;
+            }
+
+            cout << "Enter new password (leave blank to keep current): ";
+            string newPass; getline(cin, newPass);
+            if(!newPass.empty()) {
+                a.password = newPass;
+                attendee.password = newPass;
+            }
+        }
+    }
+
+    // Update vector
+    for (auto &cred : credentials) {
+        if (cred.email == a.email && cred.userType == "Attendee") {
+            cred.password = a.password;
+        }
+    }
+
+    // Truncate the text file 
+    ofstream outFile("attendees.txt", ios::trunc);
+    for (auto &attendee : attendees) {
+        outFile << attendee.id << "," << attendee.name << "," << attendee.email << "," << attendee.password << "\n";
+    }
+    outFile.close();
+
+    cout << "\n=======================================\n";
+    cout << "|| Profile updated successfully!     ||\n";
+    cout << "=======================================\n";
+    cout << "|| Press Enter to continue...        ||\n";
+    cout << "=======================================\n";
+    cin.get();
+}
+
+void deleteAttendeeProfile(Attendee &a) {
+    cout << "\n==============================================================\n";
+    cout << "|| WARNING, ONCE ACCOUNT IS DELETED, ALL DATA WILL BE LOST. ||\n";
+    cout << "==============================================================\n";
+
+    string confirmation; 
+    while (true) {
+        cout << "\nAre you sure you want to delete your account? (Y/N): ";
+        getline(cin, confirmation);
+
+        if(confirmation == "N" || confirmation == "n") {
+            cout << "Returning to dashboard. \nPress enter to continue...";
+            cin.get();
+            return;
+        } else if (confirmation == "Y" || confirmation == "y") {
+            break;
+        } else {
+            cout << "Invalid input. Please try again.\n";
+        }
+    }
+
+    // Rewrite text file
+    ifstream inFile("attendees.txt");
+    if (!inFile.is_open()) {
+        cout << "Error opening attendees.txt\n";
+        return;
+    }
+
+    vector<string> attendees;
+    string line;
+
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        string id, name, email, password;
+
+        if (getline(ss, id, ',') &&
+            getline(ss, name, ',') &&
+            getline(ss, email, ',') &&
+            getline(ss, password)) 
+        {
+            // Keep only lines that do not match the attendee's email
+            if (email != a.email) {
+                attendees.push_back(line);
+            }
+        }
+    }
+    inFile.close();
+
+    ofstream outFile("attendees.txt", ios::trunc);
+    for (const auto& attendee : attendees) {
+        outFile << attendee << "\n";
+    }
+    outFile.close();
+
+}
+
+void viewExhibitorProfile(Exhibitor &e) {
+    cout << "\n============================================================\n";
+    cout << "||                  EXHIBITOR PROFILE                     ||\n";
+    cout << "============================================================\n";
+    cout << "|| ID          : " << left << setw(41) << e.id << "||\n";
+    cout << "|| Company     : " << left << setw(41) << e.companyName << "||\n";
+    cout << "|| Email       : " << left << setw(41) << e.email << "||\n";
+    cout << "|| Password    : " << left << setw(41) << e.password << "||\n";
+    cout << "============================================================\n\n";
+}
+
+void updateExhibitorProfile(Exhibitor &e, vector<UserCredential> &credentials) {
+    viewExhibitorProfile(e);
+
+    cout << "====================================\n";
+    cout << "||  Updating Exhibitor's Profile  ||\n";
+    cout << "====================================\n\n";
+
+    vector<Exhibitor> exhibitors;
+    ifstream inFile("exhibitors.txt");
+    string line;
+
+    // Load exhibitor into memory
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Exhibitor e;
+        getline(ss, e.id, ',');
+        getline(ss, e.companyName, ',');
+        getline(ss, e.email, ',');
+        getline(ss, e.password);
+        exhibitors.push_back(e);
+    }
+    inFile.close();
+
+    for(auto &exhibitor : exhibitors) {
+        if(exhibitor.email == e.email) {
+            cout << "Enter new company name (leave blank to keep current): ";
+            string newName; getline(cin, newName);
+            if(!newName.empty()) {
+                e.companyName = newName;
+                exhibitor.companyName= newName;
+            }
+
+            cout << "Enter new password (leave blank to keep current): ";
+            string newPass; getline(cin, newPass);
+            if(!newPass.empty()) {
+                e.password = newPass;
+                exhibitor.password = newPass;
+            }
+        }
+    }
+
+    // Update vector
+    for (auto &cred : credentials) {
+        if (cred.email == e.email && cred.userType == "Attendee") {
+            cred.password = e.password;
+        }
+    }
+
+    // Truncate the text file 
+    ofstream outFile("exhibitors.txt", ios::trunc);
+    for (auto &exhibitor : exhibitors) {
+        outFile << exhibitor.id << "," << exhibitor.companyName<< "," << exhibitor.email << "," << exhibitor.password << "\n";
+    }
+    outFile.close();
+
+    cout << "\n=======================================\n";
+    cout << "|| Profile updated successfully!     ||\n";
+    cout << "=======================================\n";
+    cout << "|| Press Enter to continue...        ||\n";
+    cout << "=======================================\n";
+    cin.get();
+}
+
+void deleteExhibitorProfile(Exhibitor &e) {
+    cout << "\n==============================================================\n";
+    cout << "|| WARNING, ONCE ACCOUNT IS DELETED, ALL DATA WILL BE LOST. ||\n";
+    cout << "==============================================================\n";
+
+    string confirmation; 
+    while (true) {
+        cout << "\nAre you sure you want to delete your account? (Y/N): ";
+        getline(cin, confirmation);
+
+        if(confirmation == "N" || confirmation == "n") {
+            cout << "Returning to dashboard. \nPress enter to continue...";
+            cin.get();
+            return;
+        } else if (confirmation == "Y" || confirmation == "y") {
+            break;
+        } else {
+            cout << "Invalid input. Please try again.\n";
+        }
+    }
+
+    // Rewrite text file
+    ifstream inFile("exhibitors.txt");
+    if (!inFile.is_open()) {
+        cout << "Error opening exhibitors.txt\n";
+        return;
+    }
+
+    vector<string> exhibitors;
+    string line;
+
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        string id, name, email, password;
+
+        if (getline(ss, id, ',') &&
+            getline(ss, name, ',') &&
+            getline(ss, email, ',') &&
+            getline(ss, password)) 
+        {
+            // Keep only lines that do not match the attendee's email
+            if (email != e.email) {
+                exhibitors.push_back(line);
+            }
+        }
+    }
+    inFile.close();
+
+    ofstream outFile("exhibitors.txt", ios::trunc);
+    for (const auto& exhibitor : exhibitors) {
+        outFile << exhibitor << "\n";
+    }
+    outFile.close();
+
+}
+
+void viewAdminProfile(Admin &ad) {
+    cout << "\n============================================================\n";
+    cout << "||                     ADMIN PROFILE                      ||\n";
+    cout << "============================================================\n";
+    cout << "|| Email     : " << left << setw(43) << ad.email << "||\n";
+    cout << "|| Password  : " << left << setw(43) << ad.password << "||\n";
+    cout << "============================================================\n\n";
+}
+
+void updateAdminProfile(Admin &ad, vector<UserCredential> &credentials) {
+    viewAdminProfile(ad);
+
+    cout << "================================\n";
+    cout << "||  Updating Admin's Profile  ||\n";
+    cout << "================================\n\n";
+
+    vector<Admin> admins;
+    ifstream inFile("admins.txt");
+    string line;
+
+    // Load admin into memory
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        Admin ad;
+        getline(ss, ad.email, ',');
+        getline(ss, ad.password);
+        admins.push_back(ad);
+    }
+    inFile.close();
+
+    for(auto &admin : admins) {
+        if(admin.email == ad.email) {
+            cout << "Enter new password (leave blank to keep current): ";
+            string newPass; getline(cin, newPass);
+            if(!newPass.empty()) {
+                ad.password = newPass;
+                admin.password = newPass;
+            }
+        }
+    }
+
+    // Update vector
+    for (auto &cred : credentials) {
+        if (cred.email == ad.email && cred.userType == "Attendee") {
+            cred.password = ad.password;
+        }
+    }
+
+    // Truncate the text file 
+    ofstream outFile("admins.txt", ios::trunc);
+    for (auto &admin : admins) {
+        outFile << admin.email << "," << admin.password << "\n";
+    }
+    outFile.close();
+
+    cout << "\n=======================================\n";
+    cout << "|| Profile updated successfully!     ||\n";
+    cout << "=======================================\n";
+    cout << "|| Press Enter to continue...        ||\n";
+    cout << "=======================================\n";
+    cin.get();
+}
+
+
+// ==========================
 // MARKETING MODULE (ANNOUNCEMENT)
 // ==========================
 void postAnnouncement(vector<Announcement>& announcements) {
@@ -945,7 +1272,7 @@ void adminAnnouncementSelection(vector<Announcement> &announcements) {
 // ==========================
 // PROFILE DASHBOARD
 // ==========================
-void attendeeDashboard(Attendee &a, vector<Announcement> &annc) {
+void attendeeDashboard(Attendee &a, vector<Announcement> &annc, vector<UserCredential> &credentials) {
     while (true) {
         cout << "\n=====================================================\n";
         cout << "||               Attendee Dashboard                ||\n";
@@ -964,16 +1291,21 @@ void attendeeDashboard(Attendee &a, vector<Announcement> &annc) {
         string choice;
         getline(cin, choice);
 
-        if (choice == "1") {
+        if (choice == "1") { // View Profile
+            viewAttendeeProfile(a);
+            cout << "Press Enter to return to dashboard...";
+            cin.get();
+        }
+        else if (choice == "2") { // Update Profile
+            updateAttendeeProfile(a, credentials);
             
         }
-        else if (choice == "2") {
+        else if (choice == "3") { // Delete Profile
+            deleteAttendeeProfile(a);
+            break;
             
         }
-        else if (choice == "3") {
-            
-        }
-        else if (choice == "4") { // view annc
+        else if (choice == "4") { // View Announcement
             viewAnnouncement(annc, "Attendee");
         }
         else if (choice == "5") {
@@ -992,7 +1324,7 @@ void attendeeDashboard(Attendee &a, vector<Announcement> &annc) {
     }
 }
 
-void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc) {
+void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc, vector<UserCredential> &credentials) {
     while (true) {
         cout << "\n=====================================================\n";
         cout << "||               Exhibitor Dashboard               ||\n";
@@ -1012,16 +1344,21 @@ void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc) {
         string choice;
         getline(cin, choice);
 
-        if (choice == "1") {
+        if (choice == "1") { // View Profile
+            viewExhibitorProfile(e);
+            cout << "Press Enter to return to dashboard...";
+            cin.get();
+        }
+        else if (choice == "2") { // Update Profile
+            updateExhibitorProfile(e, credentials);
 
         }
-        else if (choice == "2") {
+        else if (choice == "3") { // Delete Profile
+            deleteExhibitorProfile(e);
+            break;
 
         }
-        else if (choice == "3") {
-
-        }
-        else if (choice == "4") { // view annc
+        else if (choice == "4") { // View Announcement
             viewAnnouncement(annc, "Exhibitor");
         }
         else if (choice == "5") {
@@ -1043,7 +1380,7 @@ void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc) {
     }
 }
 
-void adminDashboard(Admin &ad, vector<Announcement> &annc) {
+void adminDashboard(Admin &ad, vector<Announcement> &annc, vector<UserCredential> &credentials) {
 
     while (true) {
         cout << "\n=====================================================\n";
@@ -1065,13 +1402,15 @@ void adminDashboard(Admin &ad, vector<Announcement> &annc) {
         string choice;
         getline(cin, choice);
 
-        if (choice == "1") {
-
+        if (choice == "1") { // View Profile
+            viewAdminProfile(ad);
+            cout << "Press Enter to return to dashboard...";
+            cin.get();
         }
-        else if (choice == "2") {
-
+        else if (choice == "2") { // Update Profile
+            updateAdminProfile(ad, credentials);
         }
-        else if (choice == "3") { // Manage Annc
+        else if (choice == "3") { // Manage Announcement
             adminAnnouncementSelection(annc);
         }
         else if (choice == "4") { 
@@ -1161,7 +1500,7 @@ void mainMenu() {
             string attendeeEmail = login(credentials, "Attendee");
             if(attendeeEmail != "") {
                 Attendee attendee = findAttendee(attendeeEmail);
-                attendeeDashboard(attendee, announcements);
+                attendeeDashboard(attendee, announcements, credentials);
 
             }
 
@@ -1169,7 +1508,7 @@ void mainMenu() {
             string exhibitorEmail = login(credentials, "Exhibitor");
             if(exhibitorEmail != "") {
                 Exhibitor exhibitor = findExhibitor(exhibitorEmail);
-                exhibitorDashboard(exhibitor, announcements);
+                exhibitorDashboard(exhibitor, announcements, credentials);
 
             }
 
@@ -1177,7 +1516,7 @@ void mainMenu() {
             string adminEmail = login(credentials, "Admin");
             if(adminEmail != "") {
                 Admin admin = findAdmin(adminEmail);
-                adminDashboard(admin, announcements);
+                adminDashboard(admin, announcements, credentials);
             }
 
         }else if (choice == "4") signUp(credentials);
