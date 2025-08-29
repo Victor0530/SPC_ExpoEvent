@@ -6,9 +6,6 @@
 #include <regex>
 #include <limits>
 #include <sstream>
-#include <optional>
-#include <unistd.h>
-#include <direct.h>
 
 using namespace std;
 
@@ -45,6 +42,13 @@ struct LoginDetails {
     string password;
 };
 
+struct Announcement {
+    int index;
+    string userType;
+    string title;
+    string content;
+};
+
 // ==========================
 // HELPER FUNCTIONS
 // ==========================
@@ -57,6 +61,30 @@ bool isValidEmail(const string &email) {
     const regex pattern(R"(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)");
     return regex_match(email, pattern);
 }
+
+int getValidatedChoice(int min, int max) {
+    int choice;
+    while (true) {
+        cout << "Choice: ";
+
+        if (!(cin >> choice)) {
+            // Input is not an integer
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a number between " << min << " and " << max << ".\n\n";
+            continue;
+        }
+
+        if (choice < min || choice > max) {
+            cout << "Invalid choice. Please enter a number between " << min << " and " << max << ".\n\n";
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear leftover newline
+        return choice;
+    }
+}
+
 
 string generateNextID(const string &filename, char prefix) {
     ifstream inFile(filename);
@@ -217,6 +245,37 @@ Admin findAdmin(string email) {
     return foundAdmin;
 }
 
+void loadAnnouncements(vector<Announcement>& announcements) {
+    announcements.clear();
+    ifstream inFile("announcements.txt");
+    if (!inFile.is_open()) {
+        return;
+    }
+
+    string line;
+    while (getline(inFile, line)) {
+        size_t pos1 = line.find(',');
+        size_t pos2 = line.find(',', pos1 + 1);
+        size_t pos3 = line.find(',', pos2 + 1);
+        if (pos1 != string::npos && pos2 != string::npos && pos3 != string::npos) {
+            Announcement ann;
+            ann.index = stoi(line.substr(0, pos1));
+            ann.userType = line.substr(pos1 + 1, pos2 - pos1 - 1);
+            ann.title = line.substr(pos2 + 1, pos3 - pos2 - 1);
+            ann.content = line.substr(pos3 + 1);
+            announcements.push_back(ann);
+        }
+    }
+    inFile.close();
+}
+
+void saveAnnouncements(const vector<Announcement>& announcements) {
+    ofstream outFile("announcements.txt");
+    for (const auto& a : announcements) {
+        outFile << a.index << "," << a.userType << "," << a.title << "," << a.content << "\n";
+    }
+    outFile.close();
+}
 
 // ==========================
 // LOGIN MODULE
@@ -485,9 +544,408 @@ void signUp(vector<UserCredential> &credentials) {
 }
 
 // ==========================
+// MARKETING MODULE (ANNOUNCEMENT)
+// ==========================
+void postAnnouncement(vector<Announcement>& announcements) {
+    Announcement a;
+
+    cout << "======================================\n";
+    cout << "||        Post Announcement         ||\n";
+    cout << "======================================\n";
+    cout << "|| Select the recipient user type:  ||\n";
+    cout << "|| 1. Attendee                      ||\n";
+    cout << "|| 2. Exhibitor                     ||\n";
+    cout << "|| 3. Both                          ||\n";
+    cout << "|| 0. Back                          ||\n";
+    cout << "======================================\n";
+
+    int choice = getValidatedChoice(0, 3); 
+
+    if(choice == 0) return;
+    else if (choice == 1) a.userType = "Attendee";
+    else if (choice == 2) a.userType = "Exhibitor";
+    else a.userType = "Both";
+
+    while(true)
+    {
+        cout << "Enter title (Maximum 20 Characters): ";
+        getline(cin, a.title);
+
+        if(a.title == "") {
+            cout << "Title cannot be empty. Please try again.\n\n";
+        } else {
+            if(a.title.length() <= 20) {
+                break;
+            } else {
+                cout << "Title has more than 20 characters. Please try again.\n\n";
+            }
+        }
+
+    }
+
+    cout << endl;
+    
+    while(true)
+    {
+        cout << "Enter content (Maximum 50 Characters): ";
+        getline(cin, a.content);
+
+        if(a.content == "") {
+            cout << "Content cannot be empty. Please try again.\n\n";
+        } else {
+            if(a.content.length() <= 50) {
+                break;
+            } else {
+                cout << "Content has more than 50 characters. Please try again.\n\n";
+            }
+        }
+
+    }
+
+    // Assign new index
+    int maxIndex = 0;
+    for (auto& an : announcements) {
+        if (an.index > maxIndex) maxIndex = an.index;
+    }
+    a.index = maxIndex + 1;
+
+    announcements.push_back(a);
+    saveAnnouncements(announcements);
+
+    cout << "\n======================================\n";
+    cout << "||Announcement posted!!!!           ||\n";
+    cout << "======================================\n";
+    cout << "||Press Enter to continue...        ||\n";
+    cout << "======================================\n";
+    cin.get();
+
+}
+
+void viewAnnouncement(const vector<Announcement>& announcements, const string& userType) {
+    
+    cout << "======================================\n";
+    cout << "||       View Announcements         ||\n";
+    cout << "======================================\n";
+    if (announcements.empty()) {
+        cout << "|| No announcements available.       ||\n";
+        cout << "======================================\n";
+        cout << "|| Press Enter to continue...        ||\n";
+        cout << "======================================\n";
+        cin.get();
+        
+        return;
+    }
+
+    if (userType == "Admin") {
+        cout << "|| Select the usertype              ||\n";
+        cout << "|| 1. Attendee                      ||\n";
+        cout << "|| 2. Exhibitor                     ||\n";
+        cout << "|| 3. Both                          ||\n";
+        cout << "|| 0. Back                          ||\n";
+        cout << "======================================\n";
+        int choice = getValidatedChoice(0,3);
+
+        cout << endl;
+
+        if (choice == 0) { return; }
+
+        string filterType;
+        if (choice == 1) filterType = "Attendee";
+        else if (choice == 2) filterType = "Exhibitor";
+        else filterType = "Both";
+
+        bool found = false;
+        cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+        cout << "||               Current Announcements for " << left << setw(13) << filterType << "       ||\n";
+        cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+        for (const auto& ann : announcements) {
+            if (ann.userType == filterType || ann.userType == "Both" || filterType == "Both") {
+                cout << "|| Index: " << left << setw(52) << ann.index << " ||\n";
+                cout << "|| User Type: " << left << setw(48) << ann.userType << " ||\n";
+                cout << "|| Title: " << left << setw(52) << ann.title << " ||\n";
+                cout << "|| Content: " << left << setw(50) << ann.content << " ||\n";
+                cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+                found = true;
+            }
+        }
+        if (!found) {
+            cout << "======================================\n";
+            cout << "||     No announcements found       ||\n";
+            cout << "======================================\n";
+        }
+    }
+    else {
+        bool found = false;
+        cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+        cout << "||               Current Announcements for " << left << setw(13) << userType << "       ||\n";
+        cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+        for (const auto& ann : announcements) {
+            if (ann.userType == userType || ann.userType == "Both") {
+                cout << "|| Title: " << left << setw(52) << ann.title << " ||\n";
+                cout << "|| Content: " << left << setw(50) << ann.content << " ||\n";
+                cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+                found = true;
+            }
+        }
+        if (!found) {
+            cout << "======================================\n";
+            cout << "||     No announcements found       ||\n";
+            cout << "======================================\n";
+        }
+    }
+    cout << "\nPress Enter to continue...\n";
+    cin.get();
+    
+}
+
+void editAnnouncement(vector<Announcement>& announcements) {
+    
+    cout << "======================================\n";
+    cout << "||        Edit Announcement         ||\n";
+    cout << "======================================\n";
+    if (announcements.empty()) {
+        cout << "|| No announcements available.       ||\n";
+        cout << "======================================\n";
+        cout << "|| Press Enter to continue...        ||\n";
+        cout << "======================================\n";
+        cin.get();
+        
+        return;
+    }
+
+    cout << "|| Select the usertype:             ||\n";
+    cout << "|| 1. Attendee                      ||\n";
+    cout << "|| 2. Exhibitor                     ||\n";
+    cout << "|| 3. Both                          ||\n";
+    cout << "|| 0. Back                          ||\n";
+    cout << "======================================\n";
+    int choice = getValidatedChoice(0, 3);    
+
+    cout << endl;
+
+    if (choice == 0) { return; }
+
+    string filterType;
+    if (choice == 1) filterType = "Attendee";
+    else if (choice == 2) filterType = "Exhibitor";
+    else filterType = "Both";
+
+    bool found = false;
+    cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+    cout << "||               Current Announcements for " << left << setw(13) << filterType << "       ||\n";
+    cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+    for (const auto& ann : announcements) {
+        if (ann.userType == filterType || ann.userType == "Both" || filterType == "Both") {
+            cout << "|| Index: " << left << setw(52) << ann.index << " ||\n";
+            cout << "|| User Type: " << left << setw(48) << ann.userType << " ||\n";
+            cout << "|| Title: " << left << setw(52) << ann.title << " ||\n";
+            cout << "|| Content: " << left << setw(50) << ann.content << " ||\n";
+            cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+            found = true;
+        }
+    }
+    if (!found) {
+        cout << "======================================\n";
+        cout << "||     No announcements found       ||\n";
+        cout << "======================================\n";
+        cout << "|| Press Enter to continue...       ||\n";
+        cout << "======================================\n";
+        cin.get();
+        
+        return;
+    }
+
+    int index;
+
+    while (true) {
+        cout << "\nEnter the index of the announcement to edit (or 0 to go back): ";
+
+        if (!(cin >> index)) {
+            // Input is not an integer
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid index. Please enter a valid number.\n\n";
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear leftover newline
+        break;
+    }
+
+    if (index == 0) { return; }
+
+    for (auto& ann : announcements) {
+        if (ann.index == index && (ann.userType == filterType || ann.userType == "Both" || filterType == "Both")) {
+            cout << "\nEditing announcement " << index << ": " << ann.title << "\n";
+            cout << "Enter new user type (1. Attendee, 2. Exhibitor, 3. Both, leave blank to keep current): ";
+            string newUserType;
+            getline(cin, newUserType);
+            if (!newUserType.empty()) {
+                if (newUserType == "1") ann.userType = "Attendee";
+                else if (newUserType == "2") ann.userType = "Exhibitor";
+                else if (newUserType == "3") ann.userType = "Both";
+            }
+            
+            cout << "\nEnter new title (Maximum 20 Characters, leave blank to keep current): ";
+            string newTitle;
+            getline(cin, newTitle);
+            if (!newTitle.empty()) {
+                ann.title = newTitle;
+            }
+            cout << "\nEnter new content (Maximum 50 Characters, leave blank to keep current): ";
+            string newContent;
+            getline(cin, newContent);
+            if (!newContent.empty()) {
+                ann.content = newContent;
+            }
+            saveAnnouncements(announcements);
+            cout << "\n======================================\n";
+            cout << "||Announcement updated successfully! ||\n";
+            cout << "======================================\n";
+            cout << "|| Press Enter to continue...        ||\n";
+            cout << "======================================\n";
+            cin.get();
+            
+            return;
+        }
+    }
+    cout << "=====================================================\n";
+    cout << "|| Announcement not found, returning to dashboard. ||\n";
+    cout << "=====================================================\n";
+    cout << "|| Press Enter to continue...                      ||\n";
+    cout << "=====================================================\n";
+    cin.get();
+    
+}
+
+void deleteAnnouncement(vector<Announcement>& announcements) {
+    
+    cout << "======================================\n";
+    cout << "||       Delete Announcement        ||\n";
+    cout << "======================================\n";
+    if (announcements.empty()) {
+        cout << "|| No announcements available.      ||\n";
+        cout << "======================================\n";
+        cout << "|| Press Enter to continue...       ||\n";
+        cout << "======================================\n";
+        cin.get();
+        
+        return;
+    }
+
+    cout << "|| Select the usertype:             ||\n";
+    cout << "|| 1. Attendee                      ||\n";
+    cout << "|| 2. Exhibitor                     ||\n";
+    cout << "|| 3. Both                          ||\n";
+    cout << "|| 0. Back                          ||\n";
+    cout << "======================================\n";
+    cout << "Option ->";
+    int choice = getValidatedChoice(0, 3);    
+
+    cout << endl;
+
+    if (choice == 0) { return; }
+
+    string filterType;
+    if (choice == 1) filterType = "Attendee";
+    else if (choice == 2) filterType = "Exhibitor";
+    else filterType = "Both";
+
+    bool found = false;
+    cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+    cout << "||               Current Announcements for " << left << setw(13) << filterType << "       ||\n";
+    cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+    for (const auto& ann : announcements) {
+        if (ann.userType == filterType || ann.userType == "Both" || filterType == "Both") {
+            cout << "|| Index: " << left << setw(52) << ann.index << " ||\n";
+            cout << "|| User Type: " << left << setw(48) << ann.userType << " ||\n";
+            cout << "|| Title: " << left << setw(52) << ann.title << " ||\n";
+            cout << "|| Content: " << left << setw(50) << ann.content << " ||\n";
+            cout << setfill('=') << setw(65) << "=" << setfill(' ') << endl;
+            found = true;
+        }
+    }
+    if (!found) {
+        cout << "======================================\n";
+        cout << "||     No announcements found       ||\n";
+        cout << "======================================\n";
+        cout << "|| Press Enter to continue...       ||\n";
+        cout << "======================================\n";
+        cin.get();
+        
+        return;
+    }
+
+    int index;
+
+    while (true) {
+        cout << "\nEnter the index of the announcement to delete (or 0 to go back): ";
+
+        if (!(cin >> index)) {
+            // Input is not an integer
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid index. Please enter a valid number.\n\n";
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear leftover newline
+        break;
+    }
+
+    if (index == 0) { return; }
+
+    for (auto it = announcements.begin(); it != announcements.end(); ++it) {
+        if (it->index == index && (it->userType == filterType || it->userType == "Both" || filterType == "Both")) {
+            announcements.erase(it);
+            saveAnnouncements(announcements);
+            cout << "======================================\n";
+            cout << "||Announcement deleted successfully! ||\n";
+            cout << "======================================\n";
+            cout << "|| Press Enter to continue...        ||\n";
+            cout << "======================================\n";
+            cin.get();
+            
+            return;
+        }
+    }
+    cout << "\n======================================\n";
+    cout << "|| Announcement not found           ||\n";
+    cout << "======================================\n";
+    cout << "|| Press Enter to continue...       ||\n";
+    cout << "======================================\n";
+    cin.get();
+    
+}
+
+
+void adminAnnouncementSelection(vector<Announcement> &announcements) {
+    cout << "======================================\n";
+    cout << "||        Announcement Menu         ||\n";
+    cout << "======================================\n";
+    cout << "|| 1. Post Announcement             ||\n";
+    cout << "|| 2. Edit Announcement             ||\n";
+    cout << "|| 3. Delete Announcement           ||\n";
+    cout << "|| 4. View Announcement             ||\n";
+    cout << "|| 0. Back                          ||\n";
+    cout << "======================================\n";
+
+    int choice = getValidatedChoice(0, 4);
+
+    switch (choice)
+    {
+        case 1: postAnnouncement(announcements); break;
+        case 2: editAnnouncement(announcements); break;
+        case 3: deleteAnnouncement(announcements); break;
+        case 4: viewAnnouncement(announcements, "Admin"); break;
+        case 0: return;
+    }
+}
+
+// ==========================
 // PROFILE DASHBOARD
 // ==========================
-void attendeeDashboard(Attendee &a) {
+void attendeeDashboard(Attendee &a, vector<Announcement> &annc) {
     while (true) {
         cout << "\n=====================================================\n";
         cout << "||               Attendee Dashboard                ||\n";
@@ -515,8 +973,8 @@ void attendeeDashboard(Attendee &a) {
         else if (choice == "3") {
             
         }
-        else if (choice == "4") {
-            
+        else if (choice == "4") { // view annc
+            viewAnnouncement(annc, "Attendee");
         }
         else if (choice == "5") {
             
@@ -534,7 +992,7 @@ void attendeeDashboard(Attendee &a) {
     }
 }
 
-void exhibitorDashboard(Exhibitor &e) {
+void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc) {
     while (true) {
         cout << "\n=====================================================\n";
         cout << "||               Exhibitor Dashboard               ||\n";
@@ -543,11 +1001,10 @@ void exhibitorDashboard(Exhibitor &e) {
         cout << "|| 2. Update Profile                               ||\n";
         cout << "|| 3. Delete Account                               ||\n";
         cout << "|| 4. View Event Announcements                     ||\n";
-        cout << "|| 5. Post Event Announcement                      ||\n";
-        cout << "|| 6. Book Booths                                  ||\n";
-        cout << "|| 7. Manage Booth Details                         ||\n";
-        cout << "|| 8. Monitor Booth/Session Stats                  ||\n";
-        cout << "|| 9. Schedule Sessions                            ||\n";
+        cout << "|| 5. Book Booths                                  ||\n";
+        cout << "|| 6. Manage Booth Details                         ||\n";
+        cout << "|| 7. Monitor Booth/Session Stats                  ||\n";
+        cout << "|| 8. Schedule Sessions                            ||\n";
         cout << "|| 0. Logout                                       ||\n";
         cout << "=====================================================\n";
         cout << "Choice: ";
@@ -564,8 +1021,8 @@ void exhibitorDashboard(Exhibitor &e) {
         else if (choice == "3") {
 
         }
-        else if (choice == "4") {
-
+        else if (choice == "4") { // view annc
+            viewAnnouncement(annc, "Exhibitor");
         }
         else if (choice == "5") {
 
@@ -577,9 +1034,6 @@ void exhibitorDashboard(Exhibitor &e) {
 
         }
         else if (choice == "8") {
-
-        }
-        else if (choice == "9") {
 
         }
         else if (choice == "0") {
@@ -589,7 +1043,8 @@ void exhibitorDashboard(Exhibitor &e) {
     }
 }
 
-void adminDashboard(Admin &ad) {
+void adminDashboard(Admin &ad, vector<Announcement> &annc) {
+
     while (true) {
         cout << "\n=====================================================\n";
         cout << "||                 Admin Dashboard                 ||\n";
@@ -597,13 +1052,12 @@ void adminDashboard(Admin &ad) {
         cout << "|| 1. View Profile                                 ||\n"; 
         cout << "|| 2. Update Profile                               ||\n"; 
         cout << "|| 3. Manage Event Announcements                   ||\n"; 
-        cout << "|| 4. Post Event Announcement                      ||\n"; 
-        cout << "|| 5. Borrow Venue for Event                       ||\n";
-        cout << "|| 6. Monitor Ticket/Booth/Session Activity        ||\n"; 
-        cout << "|| 7. Generate Reports                             ||\n"; 
-        cout << "|| 8. View Sessions                                ||\n"; 
-        cout << "|| 9. Manage Feedbacks                             ||\n"; 
-        cout << "|| 10. Search Users/Events                         ||\n"; 
+        cout << "|| 4. Borrow Venue for Event                       ||\n";
+        cout << "|| 5. Monitor Ticket/Booth/Session Activity        ||\n"; 
+        cout << "|| 6. Generate Reports                             ||\n"; 
+        cout << "|| 7. View Sessions                                ||\n"; 
+        cout << "|| 8. Manage Feedbacks                             ||\n"; 
+        cout << "|| 9. Search Users/Events                          ||\n"; 
         cout << "|| 0. Logout                                       ||\n";
         cout << "=====================================================\n";
         cout << "Choice: ";
@@ -617,10 +1071,10 @@ void adminDashboard(Admin &ad) {
         else if (choice == "2") {
 
         }
-        else if (choice == "3") {
-
+        else if (choice == "3") { // Manage Annc
+            adminAnnouncementSelection(annc);
         }
-        else if (choice == "4") {
+        else if (choice == "4") { 
 
         }
         else if (choice == "5") {
@@ -636,9 +1090,6 @@ void adminDashboard(Admin &ad) {
 
         }
         else if (choice == "9") {
-
-        }
-        else if (choice == "10") {
 
         }
         else if (choice == "0") {
@@ -685,9 +1136,12 @@ void mainLogo() {
 
 void mainMenu() {
     vector<UserCredential> credentials;
+    vector<Announcement> announcements;
 
     while (true) {
         loadCredentials(credentials);
+        loadAnnouncements(announcements);
+
         mainLogo();
         cout << "============================================================\n";
         cout << "|| Please select one of the options below for logins:     ||\n";
@@ -707,7 +1161,7 @@ void mainMenu() {
             string attendeeEmail = login(credentials, "Attendee");
             if(attendeeEmail != "") {
                 Attendee attendee = findAttendee(attendeeEmail);
-                attendeeDashboard(attendee);
+                attendeeDashboard(attendee, announcements);
 
             }
 
@@ -715,7 +1169,7 @@ void mainMenu() {
             string exhibitorEmail = login(credentials, "Exhibitor");
             if(exhibitorEmail != "") {
                 Exhibitor exhibitor = findExhibitor(exhibitorEmail);
-                exhibitorDashboard(exhibitor);
+                exhibitorDashboard(exhibitor, announcements);
 
             }
 
@@ -723,7 +1177,7 @@ void mainMenu() {
             string adminEmail = login(credentials, "Admin");
             if(adminEmail != "") {
                 Admin admin = findAdmin(adminEmail);
-                adminDashboard(admin);
+                adminDashboard(admin, announcements);
             }
 
         }else if (choice == "4") signUp(credentials);
