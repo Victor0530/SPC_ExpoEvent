@@ -6,6 +6,9 @@
 #include <regex>
 #include <limits>
 #include <sstream>
+#include <set>
+#include <algorithm>
+#include <cctype>
 
 using namespace std;
 
@@ -49,6 +52,13 @@ struct Announcement {
     string content;
 };
 
+struct Feedback {
+    string email;
+    string eventName;
+    int rating;
+    string comment;
+};
+
 // ==========================
 // HELPER FUNCTIONS
 // ==========================
@@ -84,7 +94,6 @@ int getValidatedChoice(int min, int max) {
         return choice;
     }
 }
-
 
 string generateNextID(const string &filename, char prefix) {
     ifstream inFile(filename);
@@ -277,6 +286,48 @@ void saveAnnouncements(const vector<Announcement>& announcements) {
     outFile.close();
 }
 
+void saveFeedback(Feedback feedback) {
+    ofstream file("feedback.txt", ios::app);
+    if (file.is_open()) {
+        file << feedback.email << ",";
+        file << feedback.eventName << ",";
+        file << feedback.rating << ",";
+        file << feedback.comment << "\n";
+        file.close();
+        cout << "Feedback saved successfully." << endl;
+    } else {
+        cout << "Unable to open file for writing." << endl;
+    }
+}
+
+vector<Feedback> loadFeedbacks() {
+    vector<Feedback> feedbacks;
+    ifstream file("feedback.txt");
+    string line;
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        Feedback fb;
+        string ratingStr;
+
+        getline(ss, fb.email, ',');
+        getline(ss, fb.eventName, ',');
+        getline(ss, ratingStr, ',');
+        getline(ss, fb.comment);
+
+        try {
+            fb.rating = stoi(ratingStr);
+        } catch (...) {
+            fb.rating = 0;
+        }
+
+        if (!fb.email.empty()) {
+            feedbacks.push_back(fb);
+        }
+    }
+    return feedbacks;
+}
+
 // ==========================
 // LOGIN MODULE
 // ==========================
@@ -341,8 +392,6 @@ void signUp(vector<UserCredential> &credentials) {
             cout << "=======================================================\n";
             cout << "||         Invalid Choice, please try again!          ||\n";
             cout << "=======================================================\n";
-            cout << "Press Enter to continue...";
-            cin.get();
         } else {
             break;
         }
@@ -615,9 +664,6 @@ void updateAttendeeProfile(Attendee &a, vector<UserCredential> &credentials) {
     cout << "\n=======================================\n";
     cout << "|| Profile updated successfully!     ||\n";
     cout << "=======================================\n";
-    cout << "|| Press Enter to continue...        ||\n";
-    cout << "=======================================\n";
-    cin.get();
 }
 
 void deleteAttendeeProfile(Attendee &a) {
@@ -631,8 +677,7 @@ void deleteAttendeeProfile(Attendee &a) {
         getline(cin, confirmation);
 
         if(confirmation == "N" || confirmation == "n") {
-            cout << "Returning to dashboard. \nPress enter to continue...";
-            cin.get();
+            cout << "Returning to dashboard.\n";
             return;
         } else if (confirmation == "Y" || confirmation == "y") {
             break;
@@ -745,9 +790,6 @@ void updateExhibitorProfile(Exhibitor &e, vector<UserCredential> &credentials) {
     cout << "\n=======================================\n";
     cout << "|| Profile updated successfully!     ||\n";
     cout << "=======================================\n";
-    cout << "|| Press Enter to continue...        ||\n";
-    cout << "=======================================\n";
-    cin.get();
 }
 
 void deleteExhibitorProfile(Exhibitor &e) {
@@ -761,8 +803,7 @@ void deleteExhibitorProfile(Exhibitor &e) {
         getline(cin, confirmation);
 
         if(confirmation == "N" || confirmation == "n") {
-            cout << "Returning to dashboard. \nPress enter to continue...";
-            cin.get();
+            cout << "Returning to dashboard.\n";
             return;
         } else if (confirmation == "Y" || confirmation == "y") {
             break;
@@ -864,11 +905,7 @@ void updateAdminProfile(Admin &ad, vector<UserCredential> &credentials) {
     cout << "\n=======================================\n";
     cout << "|| Profile updated successfully!     ||\n";
     cout << "=======================================\n";
-    cout << "|| Press Enter to continue...        ||\n";
-    cout << "=======================================\n";
-    cin.get();
 }
-
 
 // ==========================
 // MARKETING MODULE (ANNOUNCEMENT)
@@ -940,11 +977,8 @@ void postAnnouncement(vector<Announcement>& announcements) {
     saveAnnouncements(announcements);
 
     cout << "\n======================================\n";
-    cout << "||Announcement posted!!!!           ||\n";
+    cout << "|| Announcement posted!!!!          ||\n";
     cout << "======================================\n";
-    cout << "||Press Enter to continue...        ||\n";
-    cout << "======================================\n";
-    cin.get();
 
 }
 
@@ -956,9 +990,6 @@ void viewAnnouncement(const vector<Announcement>& announcements, const string& u
     if (announcements.empty()) {
         cout << "|| No announcements available.       ||\n";
         cout << "======================================\n";
-        cout << "|| Press Enter to continue...        ||\n";
-        cout << "======================================\n";
-        cin.get();
         
         return;
     }
@@ -1021,7 +1052,7 @@ void viewAnnouncement(const vector<Announcement>& announcements, const string& u
         }
     }
     cout << "\nPress Enter to continue...\n";
-    cin.get();
+    cin.ignore();
     
 }
 
@@ -1033,9 +1064,6 @@ void editAnnouncement(vector<Announcement>& announcements) {
     if (announcements.empty()) {
         cout << "|| No announcements available.       ||\n";
         cout << "======================================\n";
-        cout << "|| Press Enter to continue...        ||\n";
-        cout << "======================================\n";
-        cin.get();
         
         return;
     }
@@ -1075,9 +1103,6 @@ void editAnnouncement(vector<Announcement>& announcements) {
         cout << "======================================\n";
         cout << "||     No announcements found       ||\n";
         cout << "======================================\n";
-        cout << "|| Press Enter to continue...       ||\n";
-        cout << "======================================\n";
-        cin.get();
         
         return;
     }
@@ -1091,7 +1116,7 @@ void editAnnouncement(vector<Announcement>& announcements) {
             // Input is not an integer
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Invalid index. Please enter a valid number.\n\n";
+            cout << "Invalid index. Please enter a valid number.\n";
             continue;
         }
 
@@ -1129,9 +1154,6 @@ void editAnnouncement(vector<Announcement>& announcements) {
             cout << "\n======================================\n";
             cout << "||Announcement updated successfully! ||\n";
             cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
             
             return;
         }
@@ -1139,10 +1161,6 @@ void editAnnouncement(vector<Announcement>& announcements) {
     cout << "=====================================================\n";
     cout << "|| Announcement not found, returning to dashboard. ||\n";
     cout << "=====================================================\n";
-    cout << "|| Press Enter to continue...                      ||\n";
-    cout << "=====================================================\n";
-    cin.get();
-    
 }
 
 void deleteAnnouncement(vector<Announcement>& announcements) {
@@ -1153,9 +1171,6 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
     if (announcements.empty()) {
         cout << "|| No announcements available.      ||\n";
         cout << "======================================\n";
-        cout << "|| Press Enter to continue...       ||\n";
-        cout << "======================================\n";
-        cin.get();
         
         return;
     }
@@ -1196,9 +1211,6 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
         cout << "======================================\n";
         cout << "||     No announcements found       ||\n";
         cout << "======================================\n";
-        cout << "|| Press Enter to continue...       ||\n";
-        cout << "======================================\n";
-        cin.get();
         
         return;
     }
@@ -1212,7 +1224,7 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
             // Input is not an integer
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Invalid index. Please enter a valid number.\n\n";
+            cout << "Invalid index. Please enter a valid number.\n";
             continue;
         }
 
@@ -1229,22 +1241,15 @@ void deleteAnnouncement(vector<Announcement>& announcements) {
             cout << "======================================\n";
             cout << "||Announcement deleted successfully! ||\n";
             cout << "======================================\n";
-            cout << "|| Press Enter to continue...        ||\n";
-            cout << "======================================\n";
-            cin.get();
             
             return;
         }
     }
-    cout << "\n======================================\n";
-    cout << "|| Announcement not found           ||\n";
-    cout << "======================================\n";
-    cout << "|| Press Enter to continue...       ||\n";
-    cout << "======================================\n";
-    cin.get();
+    cout << "=====================================================\n";
+    cout << "|| Announcement not found, returning to dashboard. ||\n";
+    cout << "=====================================================\n";
     
 }
-
 
 void adminAnnouncementSelection(vector<Announcement> &announcements) {
     cout << "======================================\n";
@@ -1267,6 +1272,150 @@ void adminAnnouncementSelection(vector<Announcement> &announcements) {
         case 4: viewAnnouncement(announcements, "Admin"); break;
         case 0: return;
     }
+}
+
+// ==========================
+// FEEDBACK MODULE
+// ==========================
+void submitFeedback(string email, string eventName) {
+    Feedback feedback;
+    feedback.email = email;
+    feedback.eventName = eventName;
+
+    while (true) {
+        cout << "Enter rating (1-5): ";
+        cin >> feedback.rating;
+        if (cin.fail() || feedback.rating < 1 || feedback.rating > 5) {
+            cout << "\n==============================================\n";
+            cout << "|| Invalid rating. Please enter 1 to 5 only ||\n";
+            cout << "==============================================\n\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        } else {
+            break;
+        }
+    }
+
+    cin.ignore();
+    while(true) {
+        cout << "Enter your feedback: ";
+        getline(cin, feedback.comment);
+        if(feedback.comment == "") {
+            cout << "Feedback cannot be empty, please try again.\n\n";
+            continue;
+        }
+
+        break;
+    }
+    
+    cout << "Thank you for your feedback!\n";
+    saveFeedback(feedback);
+}
+
+void viewFeedbacks() {
+    vector<Feedback> feedbacks = loadFeedbacks();
+
+    if (feedbacks.empty()) {
+        cout << "No feedback available." << endl;
+    } else {
+        cout << "\n===================================================\n";
+        cout << "||         Feedback Ratings and Comments         ||\n";
+        cout << "===================================================\n";
+        for (size_t i = 0; i < feedbacks.size(); ++i) {
+            cout << "\n================\n";
+            cout << "|| Feedback " << i + 1 << " ||\n";
+            cout << "================\n";
+            cout << "Email: " << feedbacks[i].email << endl;
+            cout << "Event: " << feedbacks[i].eventName << endl;
+            cout << "Rating: " << feedbacks[i].rating << endl;
+            cout << "Comment: " << feedbacks[i].comment << endl;
+        }
+    }
+
+    cout << "\nPress Enter to continue...";
+    cin.ignore();
+}
+
+void deleteFeedback() {
+    vector<Feedback> feedbacks = loadFeedbacks();
+
+    if (feedbacks.empty()) {
+        cout << "No feedback to delete." << endl;
+        return;
+    }
+
+    // Display feedbacks
+    cout << "\n===================================================\n";
+    cout << "||         Feedback Ratings and Comments         ||\n";
+    cout << "===================================================\n";
+    for (size_t i = 0; i < feedbacks.size(); ++i) {
+        cout << "\n================\n";
+        cout << "|| Feedback " << i + 1 << " ||\n";
+        cout << "================\n";
+        cout << "Email: " << feedbacks[i].email << endl;
+        cout << "Event: " << feedbacks[i].eventName << endl;
+        cout << "Rating: " << feedbacks[i].rating << endl;
+        cout << "Comment: " << feedbacks[i].comment << endl;
+    }
+
+    // Ask user which to delete
+    int choice;
+    while (true) {
+        cout << "\nEnter the index of the feedback to delete (0 to cancel): ";
+        cin >> choice;
+        if (cin.fail() || choice < 0 || choice > feedbacks.size()) {
+            cout << "Invalid choice. Try again.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear leftover newline
+        break;
+
+    }
+
+    if (choice == 0) {
+        cout << "Delete cancelled.\n";
+        return;
+    }
+
+    // Remove selected feedback
+    feedbacks.erase(feedbacks.begin() + (choice - 1));
+
+    // Rewrite file
+    ofstream outFile("feedback.txt");
+    for (const auto& fb : feedbacks) {
+        outFile << fb.email << ","
+                << fb.eventName << ","
+                << fb.rating << ","
+                << fb.comment << endl;
+    }
+    outFile.close();
+
+    cout << "====================================\n";
+    cout << "|| Feedback deleted successfully! ||\n";
+    cout << "====================================\n\n";
+
+}
+
+void adminFeedbackSelection() {
+    cout << "===========================================\n";
+    cout << "||             Feedback Menu             ||\n";
+    cout << "===========================================\n";
+    cout << "|| 1. View Feedbacks                     ||\n";
+    cout << "|| 2. Delete Inappropriate Feedback      ||\n";
+    cout << "|| 0. Back                               ||\n";
+    cout << "===========================================\n";
+
+    int choice = getValidatedChoice(0, 2);
+
+    switch (choice)
+    {
+        case 1: viewFeedbacks(); break;
+        case 2: deleteFeedback(); break;
+        case 0: return;
+    }
+
 }
 
 // ==========================
@@ -1294,7 +1443,7 @@ void attendeeDashboard(Attendee &a, vector<Announcement> &annc, vector<UserCrede
         if (choice == "1") { // View Profile
             viewAttendeeProfile(a);
             cout << "Press Enter to return to dashboard...";
-            cin.get();
+            cin.ignore();
         }
         else if (choice == "2") { // Update Profile
             updateAttendeeProfile(a, credentials);
@@ -1314,8 +1463,8 @@ void attendeeDashboard(Attendee &a, vector<Announcement> &annc, vector<UserCrede
         else if (choice == "6") {
             
         }
-        else if (choice == "7") {
-            
+        else if (choice == "7") { // Submit Feedbacks
+
         }
         else if (choice == "0") {
             cout << "Logging out...\n";
@@ -1347,7 +1496,7 @@ void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc, vector<UserCre
         if (choice == "1") { // View Profile
             viewExhibitorProfile(e);
             cout << "Press Enter to return to dashboard...";
-            cin.get();
+            cin.ignore();
         }
         else if (choice == "2") { // Update Profile
             updateExhibitorProfile(e, credentials);
@@ -1405,7 +1554,7 @@ void adminDashboard(Admin &ad, vector<Announcement> &annc, vector<UserCredential
         if (choice == "1") { // View Profile
             viewAdminProfile(ad);
             cout << "Press Enter to return to dashboard...";
-            cin.get();
+            cin.ignore();
         }
         else if (choice == "2") { // Update Profile
             updateAdminProfile(ad, credentials);
@@ -1425,8 +1574,8 @@ void adminDashboard(Admin &ad, vector<Announcement> &annc, vector<UserCredential
         else if (choice == "7") {
 
         }
-        else if (choice == "8") {
-
+        else if (choice == "8") { // Manage Feedbacks
+            adminFeedbackSelection();
         }
         else if (choice == "9") {
 
@@ -1531,10 +1680,6 @@ void mainMenu() {
             cout << "||          Invalid Choice, please try again!             ||\n";
             cout << "============================================================\n";
         }
-
-        cout << "\nPress Enter to continue...";
-        cin.ignore();
-
     }
 }
 
