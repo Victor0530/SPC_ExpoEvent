@@ -1,0 +1,5 @@
+lmao@gmail.com,T1,Popular Bookfair,Express,20
+lmao@gmail.com,T3,Popular Bookfair,Normal,10
+lmao@gmail.com,T5,Popular Bookfair,Normal,10
+lmao@gmail.com,T6,Popular Bookfair,Normal,10
+lmao@gmail.com,T7,Popular Bookfair,Normal,10
