@@ -98,6 +98,14 @@ struct Venue {
     bool isAvailable;
 };
 
+struct Session {
+    string sessionID;
+    string venueID;
+    string exhibitorEmail;
+    string topic;
+    string timeSlot;
+};
+
 // ==========================
 // HELPER FUNCTIONS
 // ==========================
@@ -133,7 +141,7 @@ int getValidatedChoice(int min, int max, string prompt) {
     }
 }
 
-string generateNextID(const string &filename, char prefix) {
+string generateUserID(const string &filename, char prefix) {
     ifstream inFile(filename);
     string line;
     int maxNum = 0;
@@ -189,6 +197,72 @@ string generateTicketID(const vector<Ticket>& tickets) {
     }
     return "T" + to_string(maxID + 1);
 }
+
+string generateSessionID() {
+    ifstream file("sessions.txt");
+    int maxID = 0;
+
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string id;
+            getline(ss, id, ','); // sessionID is the first field
+
+            if (!id.empty() && id[0] == 'S') {
+                try {
+                    int num = stoi(id.substr(1)); // remove 'S' and convert to int
+                    if (num > maxID) {
+                        maxID = num;
+                    }
+                } catch (...) {
+                    // ignore malformed IDs
+                }
+            }
+        }
+        file.close();
+    }
+
+    return "S" + to_string(maxID + 1);
+}
+
+int timeToInt(const string& t) {
+    int hours = stoi(t.substr(0, 2));
+    int mins = stoi(t.substr(3, 2));
+    return hours * 100 + mins;
+}
+
+bool isValidTimeSlot(const string& slot) {
+    regex pattern(R"(^\d{2}:\d{2}-\d{2}:\d{2}$)");
+    if (!regex_match(slot, pattern)) return false;
+
+    string startStr = slot.substr(0, 5);
+    string endStr   = slot.substr(6, 5);
+
+    int sh = stoi(startStr.substr(0, 2));
+    int sm = stoi(startStr.substr(3, 2));
+    int eh = stoi(endStr.substr(0, 2));
+    int em = stoi(endStr.substr(3, 2));
+
+    // Hours/minutes range check
+    if (sh < 0 || sh > 23 || eh < 0 || eh > 23) return false;
+    if (sm < 0 || sm > 59 || em < 0 || em > 59) return false;
+
+    // Start must be before end
+    return timeToInt(startStr) < timeToInt(endStr);
+}
+
+bool isOverlap(const string& slot1, const string& slot2) {
+    // Expect format "HH:MM-HH:MM"
+    int start1 = timeToInt(slot1.substr(0, 5));
+    int end1   = timeToInt(slot1.substr(6, 5));
+
+    int start2 = timeToInt(slot2.substr(0, 5));
+    int end2   = timeToInt(slot2.substr(6, 5));
+
+    return (start1 < end2 && start2 < end1);
+}
+
 
 // ==========================
 // FILE HANDLING
@@ -553,6 +627,47 @@ void loadBooths(vector<Booth>& booths) {
     file.close();
 }
 
+void saveSessions(const vector<Session>& sessions) {
+    ofstream file("sessions.txt");
+    if (!file.is_open()) {
+        cout << "Error opening sessions.txt for writing.\n";
+        return;
+    }
+    for (const auto& s : sessions) {
+        file << s.sessionID << ","
+             << s.venueID << ","
+             << s.exhibitorEmail << ","
+             << s.topic << ","
+             << s.timeSlot << endl;
+    }
+    file.close();
+}
+
+void loadSessions(vector<Session>& sessions) {
+    ifstream file("sessions.txt");
+    string line;
+
+    if (!file) {
+        cout << "No sessions found yet.\n";
+        return;
+    }
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        Session s;
+        getline(ss, s.sessionID, ',');
+        getline(ss, s.venueID, ',');
+        getline(ss, s.exhibitorEmail, ',');
+        getline(ss, s.topic, ',');
+        getline(ss, s.timeSlot, ',');
+
+        if (!s.sessionID.empty()) { // safety check
+            sessions.push_back(s);
+        }
+    }
+    file.close();
+}
+
 // ==========================
 // LOGIN MODULE
 // ==========================
@@ -645,7 +760,7 @@ void signUp(vector<UserCredential> &credentials) {
         Attendee a;
 
         // id field (auto generated)
-        a.id = generateNextID("attendees.txt", 'A');
+        a.id = generateUserID("attendees.txt", 'A');
         cout << "Generated Attendee ID: " << a.id << endl;
 
         // name field
@@ -709,7 +824,7 @@ void signUp(vector<UserCredential> &credentials) {
         Exhibitor e;
 
         // id field (auto generated)
-        e.id = generateNextID("exhibitors.txt", 'E');
+        e.id = generateUserID("exhibitors.txt", 'E');
         cout << "Generated Exhibitor ID: " << e.id << endl;
 
         // company name field
@@ -1909,7 +2024,7 @@ void viewBooth(const string& email){
     bool found = false;
     loadBooths(booths);
     for (const auto& booth : booths) {
-        if (booth.userEmail == email) {
+        if (booth.userEmail == email && booth.isRented) {
             found = true;
             cout << endl;
             cout << "Booth ID: " << booth.boothID << endl;
@@ -2250,6 +2365,21 @@ void closeEvent(const string& venueID, vector<Venue>& venues) {
     }
     boothFile.close();
 
+    // Remove all sessions for this venue
+    vector<Session> sessions;
+    loadSessions(sessions);
+    ofstream sessionFile("sessions.txt");
+    for (const auto& s : sessions) {
+        if (s.venueID != venueID) {
+            sessionFile << s.sessionID << ","
+                       << s.venueID << ","
+                       << s.exhibitorEmail << ","
+                       << s.topic << ","
+                       << s.timeSlot << endl;
+        }
+    }
+    sessionFile.close();
+
     // Reset the venue
     for (auto& v : venues) {
         if (v.venueID == venueID) {
@@ -2367,6 +2497,332 @@ void viewBoothReceipt(const vector<Booth>& booths) {
     }
 }
 
+// ==========================
+// SESSION SCHEDULING MODULE
+// ==========================
+void scheduleSession(const string &email) {
+    vector<Booth> booths;
+    loadBooths(booths);
+
+    vector<Session> sessions;
+    loadSessions(sessions);
+
+    Session s;
+    s.sessionID = generateSessionID();
+    s.exhibitorEmail = email;
+
+    // Validate venue
+    string venueID;
+    bool validVenue = false;
+    while (!validVenue) {
+        cout << "Enter Venue ID where you want to schedule a session (0 to cancel): ";
+        getline(cin, venueID);
+
+        if(venueID == "0") return;
+
+        // Check exhibitor has booth in that venue
+        bool hasBooth = false;
+        for (const auto& booth : booths) {
+            if (booth.userEmail == email && booth.venueID == venueID) {
+                hasBooth = true;
+                break;
+            }
+        }
+
+        if (!hasBooth) {
+            cout << "You do not have a booth in this venue. Please try again.\n\n";
+            continue;
+        }
+
+        // Check if exhibitor already scheduled a session in this venue
+        bool alreadyScheduled = false;
+        for (const auto& sess : sessions) {
+            if (sess.exhibitorEmail == email && sess.venueID == venueID) {
+                alreadyScheduled = true;
+                break;
+            }
+        }
+
+        if (alreadyScheduled) {
+            cout << "You already scheduled a session in this venue.\n";
+            return; // exit scheduling
+        }
+
+        validVenue = true;
+    }
+    s.venueID = venueID;
+
+    do
+    {
+        cout << "Enter Session Topic: ";
+        getline(cin, s.topic);
+
+        if(!s.topic.empty()) break;
+
+        cout << "Session topic cannot be empty. Please try again.\n\n";
+ 
+    } while (s.topic.empty());
+    
+
+    // Validate timeslot
+    string timeSlot;
+    while (true) {
+        cout << "Enter time slot (format HH:MM-HH:MM): ";
+        getline(cin, timeSlot);
+
+        if (!isValidTimeSlot(timeSlot)) {
+            cout << "Invalid format or time range. Example valid input: 09:00-10:30\n\n";
+            continue;
+        }
+
+        // Clash check
+        bool clash = false;
+        for (const auto& sess : sessions) {
+            if (sess.venueID == venueID && isOverlap(sess.timeSlot, timeSlot)) {
+                clash = true;
+                break;
+            }
+        }
+
+        if (clash) {
+            cout << "This time slot overlaps with another session in this venue. Please try again.\n";
+            continue;
+        }
+
+        break; // valid and no clash
+    }
+    s.timeSlot = timeSlot;
+
+    // Save session
+    sessions.push_back(s);
+    saveSessions(sessions);
+    cout << "Session scheduled successfully! Session ID: " << s.sessionID << endl;
+}
+
+void viewAllSessions() {
+    vector<Session> sessions;
+    loadSessions(sessions);
+
+    if (sessions.empty()) {
+        cout << "No sessions scheduled yet.\n";
+        return;
+    }
+
+    cout << "All Scheduled Sessions:";
+    for (const auto& s : sessions) {
+        cout << "\n---------------------------------------------------------\n";
+        cout << "SessionID: " << s.sessionID
+             << "\nExhibitor: " << s.exhibitorEmail
+             << "\nVenue: " << s.venueID
+             << "\nTopic: " << s.topic
+             << "\nTime: " << s.timeSlot;
+        cout << "\n\n---------------------------------------------------------\n";
+
+    }
+}
+
+void viewSessionsByExhibitor(const string& email) {
+    vector<Session> sessions;
+    loadSessions(sessions);
+
+    cout << "Your Scheduled Sessions:\n";
+    bool found = false;
+    for (const auto& s : sessions) {
+        if (s.exhibitorEmail == email) {   // only show their own sessions
+            cout << "[" << s.sessionID << "] "
+                 << s.topic
+                 << " (Venue " << s.venueID 
+                 << ", Time: " << s.timeSlot << ")\n";
+            found = true;
+        }
+    }
+
+    if (!found) {
+        cout << "You have not scheduled any sessions yet.\n";
+    }
+}
+
+
+void viewSessionsByAttendee(const string& email) {
+    // 1. Load attendee's tickets
+    vector<Ticket> tickets;
+    loadTickets(tickets);
+
+    // 2. Load venues 
+    vector<Venue> venues;
+    loadVenues(venues);  // 
+
+    // 3. Collect all venueIDs that the attendee joined (via eventName in tickets)
+    set<string> joinedVenueIDs;
+    for (const auto& t : tickets) {
+        if (t.userEmail == email) {
+            for (const auto& v : venues) {
+                if (v.eventName == t.eventName) {
+                    joinedVenueIDs.insert(v.venueID);
+                }
+            }
+        }
+    }
+
+    if (joinedVenueIDs.empty()) {
+        cout << "You have not joined any events yet.\n";
+        return;
+    }
+
+    // 4. Load sessions
+    vector<Session> sessions;
+    loadSessions(sessions);
+
+    // 5. Display only sessions matching the attendee's joined venues
+    cout << "Sessions available for events you joined:\n";
+    bool found = false;
+    for (const auto& s : sessions) {
+        if (joinedVenueIDs.find(s.venueID) != joinedVenueIDs.end()) {
+            cout << "[" << s.sessionID << "] "
+                 << s.topic << " (Venue " << s.venueID
+                 << ", Time: " << s.timeSlot << ")\n";
+            found = true;
+        }
+    }
+
+    if (!found) {
+        cout << "No sessions scheduled yet for the events you joined.\n";
+    }
+}
+
+void updateSession(const string& email) {
+    vector<Session> sessions;
+    loadSessions(sessions);
+
+    // Show exhibitor's sessions
+    vector<int> ownedIndexes;
+    cout << "Your Scheduled Sessions:\n";
+    for (int i = 0; i < sessions.size(); i++) {
+        if (sessions[i].exhibitorEmail == email) {
+            cout << i+1 << ". [" << sessions[i].sessionID << "] "
+                 << sessions[i].topic << " at Venue " << sessions[i].venueID
+                 << " (" << sessions[i].timeSlot << ")\n";
+            ownedIndexes.push_back(i);
+        }
+    }
+
+    if (ownedIndexes.empty()) {
+        cout << "You have no sessions to update.\n";
+        return;
+    }
+
+    int choice = getValidatedChoice(0, ownedIndexes.size(), "Enter the number of the session you want to update (0 to cancel): ");
+    if (choice == 0) {
+        cout << "Update cancelled.\n";
+        return;
+    }
+
+    int idx = ownedIndexes[choice - 1];
+
+    cout << "Enter new topic (leave empty to keep current): ";
+    string newTopic;
+    getline(cin, newTopic);
+    if (!newTopic.empty()) sessions[idx].topic = newTopic;
+
+    // Validate new time slot
+    string newSlot;
+    while (true) {
+        cout << "Enter new time slot (HH:MM-HH:MM, leave empty to keep current): ";
+        getline(cin, newSlot);
+
+        if (newSlot.empty()) break;
+
+        if (!isValidTimeSlot(newSlot)) {
+            cout << "Invalid time format. Example: 09:00-10:30\n";
+            continue;
+        }
+
+        // Check clash with other sessions
+        bool clash = false;
+        for (int j = 0; j < sessions.size(); j++) {
+            if (j != idx && sessions[j].venueID == sessions[idx].venueID &&
+                isOverlap(sessions[j].timeSlot, newSlot)) {
+                clash = true;
+                break;
+            }
+        }
+
+        if (clash) {
+            cout << "Time slot overlaps with another session. Please try again.\n";
+            continue;
+        }
+
+        sessions[idx].timeSlot = newSlot;
+        break;
+    }
+
+    saveSessions(sessions);
+    cout << "Session updated successfully.\n";
+}
+
+void deleteSession(const string& email) {
+    vector<Session> sessions;
+    loadSessions(sessions);
+
+    // Show exhibitor's sessions
+    vector<int> ownedIndexes;
+    cout << "Your Scheduled Sessions:\n";
+    for (int i = 0; i < sessions.size(); i++) {
+        if (sessions[i].exhibitorEmail == email) {
+            cout << i+1 << ". [" << sessions[i].sessionID << "] "
+                 << sessions[i].topic<< " at Venue " << sessions[i].venueID
+                 << " (" << sessions[i].timeSlot << ")\n";
+            ownedIndexes.push_back(i);
+        }
+    }
+
+    if (ownedIndexes.empty()) {
+        cout << "You have no sessions to delete.\n";
+        return;
+    }
+
+    int choice = getValidatedChoice(0, ownedIndexes.size(), "Enter the number of the session you want to delete (0 to cancel): ");
+    if (choice == 0) {
+        cout << "Deletion cancelled.\n";
+        return;
+    }
+
+    int idx = ownedIndexes[choice - 1];
+    cout << "Are you sure you want to delete session [" << sessions[idx].sessionID << "] (Y/N)? ";
+    char confirm;
+    cin >> confirm;
+    cin.ignore();
+
+    if (confirm == 'y' || confirm == 'Y') {
+        sessions.erase(sessions.begin() + idx);
+        saveSessions(sessions);
+        cout << "Session deleted successfully.\n";
+    } else {
+        cout << "Deletion cancelled.\n";
+    }
+}
+
+void ExhibitorSessionSelection(const string& email) {
+    cout << "===========================================\n";
+    cout << "||              Session Menu             ||\n";
+    cout << "===========================================\n";
+    cout << "|| 1. View All Session Scheduled         ||\n";
+    cout << "|| 2. Update Session Detail              ||\n";
+    cout << "|| 3. Delete Session                     ||\n";
+    cout << "|| 0. Back                               ||\n";
+    cout << "===========================================\n";
+
+    int choice = getValidatedChoice(0, 3, "Choice: ");
+
+    switch (choice)
+    {
+        case 1: viewSessionsByExhibitor(email); break;
+        case 2: updateSession(email); break;
+        case 3: deleteSession(email); break;
+        case 0: return;
+    }
+ 
+}
 
 // ==========================
 // PROFILE DASHBOARD
@@ -2383,6 +2839,7 @@ void attendeeDashboard(Attendee &a, vector<Announcement> &annc, vector<UserCrede
         cout << "|| 5. Purchase Tickets                             ||\n";
         cout << "|| 6. Manage Purchased Tickets                     ||\n";
         cout << "|| 7. Submit Feedbacks                             ||\n";
+        cout << "|| 8. View Available Sessions                      ||\n";
         cout << "|| 0. Logout                                       ||\n";
         cout << "=====================================================\n";
         cout << "Choice: ";
@@ -2421,6 +2878,9 @@ void attendeeDashboard(Attendee &a, vector<Announcement> &annc, vector<UserCrede
             submitFeedback(a.email, tickets);
 
         }
+        else if (choice == "8") { // View Sessions
+            viewSessionsByAttendee(a.email);
+        }
         else if (choice == "0") {
             cout << "Logging out...\n";
             break;
@@ -2441,6 +2901,7 @@ void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc, vector<UserCre
         cout << "|| 6. Manage Booked Booths                         ||\n";
         cout << "|| 7. Monitor Booth/Session Stats                  ||\n";
         cout << "|| 8. Schedule Sessions                            ||\n";
+        cout << "|| 9. Manage Sessions Scheduled                    ||\n";
         cout << "|| 0. Logout                                       ||\n";
         cout << "=====================================================\n";
         cout << "Choice: ";
@@ -2476,8 +2937,11 @@ void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc, vector<UserCre
         else if (choice == "7") {
 
         }
-        else if (choice == "8") {
-
+        else if (choice == "8") { // Schedule Session
+            scheduleSession(e.email);
+        }
+        else if (choice == "9") { // Manage Session
+            ExhibitorSessionSelection(e.email);
         }
         else if (choice == "0") {
             cout << "Logging out...\n";
@@ -2528,8 +2992,8 @@ void adminDashboard(Admin &ad, vector<Announcement> &annc, vector<UserCredential
         else if (choice == "6") {
 
         }
-        else if (choice == "7") {
-
+        else if (choice == "7") { // View Sessions
+            viewAllSessions();
         }
         else if (choice == "8") { // Manage Feedbacks
             adminFeedbackSelection();
