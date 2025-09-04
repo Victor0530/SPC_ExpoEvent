@@ -2447,54 +2447,6 @@ void adminEventSelection() {
     }
  
 }
-// ==========================
-// PAYMENT MODULE
-// ==========================
-// void viewPaymentSummary(const vector<Ticket>& tickets) {
-//     if (tickets.empty()) {
-//         cout << "No tickets found." << endl;
-//         return;
-//     }
-//     double totalAmount = 0.0;
-//     for (const auto& ticket : tickets) {
-//         totalAmount += ticket.amount;
-//     }
-//     cout << "Total Payment Summary:" << endl;
-//     cout << "Total Tickets Sold: " << tickets.size() << endl;
-//     cout << "Total Amount: " << totalAmount << endl;
-// }
-
-// void viewTicketReceipt(const vector<Ticket>& tickets) {
-//     if (tickets.empty()) {
-//         cout << "No tickets found." << endl;
-//         cin.ignore();
-//         return;
-//     }
-//     for (const auto& ticket : tickets) {
-//         cout << "User Email: " << ticket.userEmail << endl;
-//         cout << "Ticket ID: " << ticket.ticketID << endl;
-//         cout << "Event Name: " << ticket.eventName << endl;
-//         cout << "Ticket Type: " << ticket.ticketType << endl;
-//         cout << "Amount: " << ticket.amount << endl;
-//         cout << "------------------------\n" << endl;
-//     }
-//     viewPaymentSummary(tickets);
-//     cin.ignore();
-// }
-
-// void viewBoothReceipt(const vector<Booth>& booths) {
-//     if (booths.empty()) {
-//         cout << "No booths found." << endl;
-//         return;
-//     }
-//     for (const auto& booth : booths) {
-//         cout << "User Email: " << booth.userEmail << endl;
-//         cout << "Venue ID: " << booth.venueID << endl;
-//         cout << "Booth ID: " << booth.boothID << endl;
-//         cout << "Amount: " << booth.amount << endl;
-//         cout << "------------------------" << endl;
-//     }
-// }
 
 // ==========================
 // SESSION SCHEDULING MODULE
@@ -2960,6 +2912,179 @@ void monitorAdminStats() {
 }
 
 // ==========================
+// REPORTING MODULE
+// ==========================
+void generateEventReport(const string& venueID, const vector<Ticket>& tickets, const vector<Booth>& booths, const vector<Session>& sessions, const vector<Venue>& venues) {
+    
+    // Find venue
+    auto it = find_if(venues.begin(), venues.end(),
+        [&](const Venue& v) { return v.venueID == venueID; });
+
+    if (it == venues.end() || it->eventName.empty()) {
+        cout << "[ERROR] Venue not found or no event assigned.\n";
+        return;
+    }
+
+    const Venue& venue = *it;
+    cout << "\n=========================================\n";
+    cout << "FINAL REPORT FOR EVENT: " << venue.eventName << "\n";
+    cout << "Venue ID: " << venue.venueID << "\n";
+    cout << "=========================================\n";
+
+    // --- Ticket Summary ---
+    int totalTickets = 0;
+    double totalTicketRevenue = 0.0;
+    for (const auto& t : tickets) {
+        if (t.eventName == venue.eventName) { // only this event
+            totalTickets++;
+            totalTicketRevenue += t.amount;
+        }
+    }
+    cout << "Ticket Sales Summary\n";
+    cout << "Total Tickets Sold : " << totalTickets << endl;
+    cout << "Total Ticket Revenue: RM " << fixed << setprecision(2) << totalTicketRevenue << "\n";
+
+    // --- Booth Summary ---
+    int totalBooths = 0;
+    double totalBoothRevenue = 0.0;
+    for (const auto& b : booths) {
+        if (b.venueID == venue.venueID && b.isRented) {
+            totalBooths++;
+            totalBoothRevenue += b.amount;
+        }
+    }
+    cout << "\nBooth Rental Summary\n";
+    cout << "Total Booths Rented : " << totalBooths << endl;
+    cout << "Total Booth Revenue : RM " << fixed << setprecision(2) << totalBoothRevenue << "\n";
+
+    // --- Session Summary ---
+    cout << "\nSessions Summary\n";
+    bool hasSessions = false;
+    for (const auto& s : sessions) {
+        if (s.venueID == venue.venueID) {
+            cout << "   - [" << s.sessionID << "] "
+                 << s.topic << " | Time: " << s.timeSlot
+                 << " | Exhibitor: " << s.exhibitorEmail << "\n";
+            hasSessions = true;
+        }
+    }
+    if (!hasSessions) cout << "   No sessions scheduled.\n";
+
+    // --- Grand Total ---
+    double grandTotal = totalTicketRevenue + totalBoothRevenue;
+    cout << "\nGRAND TOTAL REVENUE: RM " << fixed << setprecision(2) << grandTotal << endl;
+    cout << "=========================================\n";
+    cout << "         END OF FINAL REPORT              \n";
+    cout << "=========================================\n";
+}
+
+void exportReportToFile(const string& venueID, const vector<Ticket>& tickets, const vector<Booth>& booths, const vector<Session>& sessions, const vector<Venue>& venues) {
+    
+    auto it = find_if(venues.begin(), venues.end(),
+        [&](const Venue& v) { return v.venueID == venueID; });
+
+    if (it == venues.end() || it->eventName.empty()) {
+        cout << "[ERROR] Venue not found or no event assigned.\n";
+        return;
+    }
+
+
+    const Venue& venue = *it;
+    const string filename = venue.eventName + " Event Report.txt";
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cout << "[ERROR] Unable to create report file.\n";
+        return;
+    }
+
+    file << "========== FINAL REPORT ==========\n";
+    file << "Event: " << venue.eventName << "\n";
+    file << "Venue: " << venue.venueID << "\n";
+
+    // Tickets
+    int totalTickets = 0;
+    double totalTicketRevenue = 0.0;
+    for (const auto& t : tickets) {
+        if (t.eventName == venue.eventName) {
+            totalTickets++;
+            totalTicketRevenue += t.amount;
+        }
+    }
+    file << "\nTicket Sales:\n";
+    file << "Total Tickets Sold : " << totalTickets << "\n";
+    file << "Total Ticket Revenue: RM " << fixed << setprecision(2) << totalTicketRevenue << "\n";
+
+    // Booths
+    int totalBooths = 0;
+    double totalBoothRevenue = 0.0;
+    for (const auto& b : booths) {
+        if (b.venueID == venue.venueID && b.isRented) {
+            totalBooths++;
+            totalBoothRevenue += b.amount;
+        }
+    }
+    file << "\nBooth Rentals:\n";
+    file << "Total Booths Rented : " << totalBooths << "\n";
+    file << "Total Booth Revenue : RM " << fixed << setprecision(2) << totalBoothRevenue << "\n";
+
+    // Sessions
+    file << "\nSessions Summary:\n";
+    bool hasSessions = false;
+    for (const auto& s : sessions) {
+        if (s.venueID == venue.venueID) {
+            file << " - [" << s.sessionID << "] " << s.topic
+                 << " | Time: " << s.timeSlot
+                 << " | Exhibitor: " << s.exhibitorEmail << "\n";
+            hasSessions = true;
+        }
+    }
+    if (!hasSessions) file << "No sessions scheduled.\n";
+
+    // Grand Total
+    double grandTotal = totalTicketRevenue + totalBoothRevenue;
+    file << "\nGRAND TOTAL REVENUE: RM " << fixed << setprecision(2) << grandTotal << "\n";
+    file << "========== END OF REPORT ==========\n";
+
+    file.close();
+    cout << "[INFO] Final report for " << venue.eventName 
+         << " exported to " << filename << endl;
+}
+
+void adminReportSelection() {
+    vector<Ticket> tickets; loadTickets(tickets);
+    vector<Booth> booths; loadBooths(booths);
+    vector<Session> sessions; loadSessions(sessions);
+    vector<Venue> venues; loadVenues(venues);
+
+    cout << "===========================================\n";
+    cout << "||            Reporting Menu             ||\n";
+    cout << "===========================================\n";
+
+    cout << "Available Events:\n";
+    for (const auto& v : venues) {
+        if (!v.eventName.empty())
+            cout << " - Venue " << v.venueID << ": " << v.eventName << endl;
+    }
+
+    string venueID;
+    cout << "\nEnter Venue ID to generate report: ";
+    getline(cin, venueID);
+    transform(venueID.begin(), venueID.end(), venueID.begin(), ::toupper);
+
+    cout << "1. View Report on Screen\n";
+    cout << "2. Export Report to File\n";
+    int choice = getValidatedChoice(0, 2, "Choice (0 to return): ");
+
+    switch (choice)
+    {
+        case 1: generateEventReport(venueID, tickets, booths, sessions, venues); break;
+        case 2: exportReportToFile(venueID, tickets, booths, sessions, venues); break;
+        case 0: return;
+    }
+
+
+}
+// ==========================
 // PROFILE DASHBOARD
 // ==========================
 void attendeeDashboard(Attendee &a, vector<Announcement> &annc, vector<UserCredential> &credentials) {
@@ -3099,7 +3224,6 @@ void adminDashboard(Admin &ad, vector<Announcement> &annc, vector<UserCredential
         cout << "|| 6. Manage Feedbacks                             ||\n"; 
         cout << "|| 7. Monitor Ticket/Booth/Session Stats           ||\n"; 
         cout << "|| 8. Manage Reports                               ||\n"; 
-        cout << "|| 9. Search Users/Events                          ||\n"; 
         cout << "|| 0. Logout                                       ||\n";
         cout << "=====================================================\n";
         cout << "Choice: ";
@@ -3130,12 +3254,8 @@ void adminDashboard(Admin &ad, vector<Announcement> &annc, vector<UserCredential
         else if (choice == "7") { // Monitor Stats
             monitorAdminStats();
         }
-        else if (choice == "8") {
-
-        }
-
-        else if (choice == "9") {
-
+        else if (choice == "8") { // Manage Report
+            adminReportSelection();
         }
         else if (choice == "0") {
             cout << "Logging out...\n";
