@@ -1631,8 +1631,6 @@ void submitFeedback(const string& email, vector<Ticket> &tickets) {
 
         if (attendedEvents.empty()) {
             cout << "You have not attended any events yet. Cannot submit feedback.\n";
-            cout << "Press Enter to continue...";
-            cin.ignore();
             return;
 
         } else {
@@ -1849,8 +1847,6 @@ void refundTicket(const string& email) {
     }
     if (userTickets.empty()) {
         cout << "You have no tickets to refund.\n";
-        cout << "Press enter to continue...";
-        cin.ignore();
         return;
     }
     cout << "Your tickets:\n";
@@ -2036,8 +2032,9 @@ void viewBooth(const string& email){
         cout << "No booths found for this email." << endl;
     }
 
-    cout << "Press enter to continue...";
+    cout << "\nPress Enter to continue...\n";
     cin.ignore();
+
 }
 
 void viewAllBookedBooths(const string &venueID) {
@@ -2074,8 +2071,6 @@ void refundBooth(const string& email) {
     int choice = getValidatedChoice(0, (int)userBooths.size(), "Enter which booth you want to refund (0 to cancel): ");
     if (choice == 0) {
         cout << "Refund cancelled.\n";
-        cout << "Press enter to continue...";
-        cin.ignore();
         return;
     }
 
@@ -2317,6 +2312,10 @@ void viewAllVenue(const vector<Venue>& venues) {
             cin.ignore();
         }
     }
+
+    cout << "\nPress Enter to continue...\n";
+    cin.ignore();
+
 }
 
 void closeEvent(const string& venueID, vector<Venue>& venues) {
@@ -2408,8 +2407,6 @@ void closeEventMenu(vector<Venue>& venues) {
     }
     if (closableIndexes.empty()) {
         cout << "No active events to close.\n";
-        cout << "Press Enter to continue...";
-        cin.ignore();
         return;
     }
 
@@ -2570,6 +2567,10 @@ void viewAllSessions() {
         cout << "\n\n---------------------------------------------------------\n";
 
     }
+
+    cout << "\nPress Enter to continue...\n";
+    cin.ignore();
+
 }
 
 void viewSessionsByExhibitor(const string& email) {
@@ -2591,6 +2592,10 @@ void viewSessionsByExhibitor(const string& email) {
     if (!found) {
         cout << "You have not scheduled any sessions yet.\n";
     }
+
+    cout << "\nPress Enter to continue...\n";
+    cin.ignore();
+
 }
 
 void viewSessionsByAttendee(const string& email) {
@@ -2638,6 +2643,10 @@ void viewSessionsByAttendee(const string& email) {
     if (!found) {
         cout << "No sessions scheduled yet for the events you joined.\n";
     }
+
+    cout << "\nPress Enter to continue...\n";
+    cin.ignore();
+
 }
 
 void updateSession(const string& email) {
@@ -2826,6 +2835,9 @@ void monitorExhibitorStats(const string& exhibitorEmail) {
         cout << "No sessions scheduled yet.\n";
     }
 
+    cout << "\nPress Enter to continue...\n";
+    cin.ignore();
+
 }
 
 void monitorAdminStats() {
@@ -2909,6 +2921,9 @@ void monitorAdminStats() {
         cout << " - No sessions scheduled yet.\n";
     }
 
+    cout << "\nPress Enter to continue...\n";
+    cin.ignore();
+
 }
 
 // ==========================
@@ -2976,6 +2991,10 @@ void generateEventReport(const string& venueID, const vector<Ticket>& tickets, c
     cout << "=========================================\n";
     cout << "         END OF FINAL REPORT              \n";
     cout << "=========================================\n";
+
+    cout << "\nPress Enter to continue...\n";
+    cin.ignore();
+
 }
 
 void exportReportToFile(const string& venueID, const vector<Ticket>& tickets, const vector<Booth>& booths, const vector<Session>& sessions, const vector<Venue>& venues) {
@@ -3046,8 +3065,11 @@ void exportReportToFile(const string& venueID, const vector<Ticket>& tickets, co
     file << "========== END OF REPORT ==========\n";
 
     file.close();
-    cout << "[INFO] Final report for " << venue.eventName 
-         << " exported to " << filename << endl;
+    cout << "[INFO] Final report for " << venue.eventName << " exported to " << filename << endl;
+
+    cout << "\nPress Enter to continue...\n";
+    cin.ignore();
+
 }
 
 void adminReportSelection() {
