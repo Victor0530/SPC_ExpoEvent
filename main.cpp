@@ -263,7 +263,6 @@ bool isOverlap(const string& slot1, const string& slot2) {
     return (start1 < end2 && start2 < end1);
 }
 
-
 // ==========================
 // FILE HANDLING
 // ==========================
@@ -2451,51 +2450,51 @@ void adminEventSelection() {
 // ==========================
 // PAYMENT MODULE
 // ==========================
-void viewPaymentSummary(const vector<Ticket>& tickets) {
-    if (tickets.empty()) {
-        cout << "No tickets found." << endl;
-        return;
-    }
-    double totalAmount = 0.0;
-    for (const auto& ticket : tickets) {
-        totalAmount += ticket.amount;
-    }
-    cout << "Total Payment Summary:" << endl;
-    cout << "Total Tickets Sold: " << tickets.size() << endl;
-    cout << "Total Amount: " << totalAmount << endl;
-}
+// void viewPaymentSummary(const vector<Ticket>& tickets) {
+//     if (tickets.empty()) {
+//         cout << "No tickets found." << endl;
+//         return;
+//     }
+//     double totalAmount = 0.0;
+//     for (const auto& ticket : tickets) {
+//         totalAmount += ticket.amount;
+//     }
+//     cout << "Total Payment Summary:" << endl;
+//     cout << "Total Tickets Sold: " << tickets.size() << endl;
+//     cout << "Total Amount: " << totalAmount << endl;
+// }
 
-void viewTicketReceipt(const vector<Ticket>& tickets) {
-    if (tickets.empty()) {
-        cout << "No tickets found." << endl;
-        cin.ignore();
-        return;
-    }
-    for (const auto& ticket : tickets) {
-        cout << "User Email: " << ticket.userEmail << endl;
-        cout << "Ticket ID: " << ticket.ticketID << endl;
-        cout << "Event Name: " << ticket.eventName << endl;
-        cout << "Ticket Type: " << ticket.ticketType << endl;
-        cout << "Amount: " << ticket.amount << endl;
-        cout << "------------------------\n" << endl;
-    }
-    viewPaymentSummary(tickets);
-    cin.ignore();
-}
+// void viewTicketReceipt(const vector<Ticket>& tickets) {
+//     if (tickets.empty()) {
+//         cout << "No tickets found." << endl;
+//         cin.ignore();
+//         return;
+//     }
+//     for (const auto& ticket : tickets) {
+//         cout << "User Email: " << ticket.userEmail << endl;
+//         cout << "Ticket ID: " << ticket.ticketID << endl;
+//         cout << "Event Name: " << ticket.eventName << endl;
+//         cout << "Ticket Type: " << ticket.ticketType << endl;
+//         cout << "Amount: " << ticket.amount << endl;
+//         cout << "------------------------\n" << endl;
+//     }
+//     viewPaymentSummary(tickets);
+//     cin.ignore();
+// }
 
-void viewBoothReceipt(const vector<Booth>& booths) {
-    if (booths.empty()) {
-        cout << "No booths found." << endl;
-        return;
-    }
-    for (const auto& booth : booths) {
-        cout << "User Email: " << booth.userEmail << endl;
-        cout << "Venue ID: " << booth.venueID << endl;
-        cout << "Booth ID: " << booth.boothID << endl;
-        cout << "Amount: " << booth.amount << endl;
-        cout << "------------------------" << endl;
-    }
-}
+// void viewBoothReceipt(const vector<Booth>& booths) {
+//     if (booths.empty()) {
+//         cout << "No booths found." << endl;
+//         return;
+//     }
+//     for (const auto& booth : booths) {
+//         cout << "User Email: " << booth.userEmail << endl;
+//         cout << "Venue ID: " << booth.venueID << endl;
+//         cout << "Booth ID: " << booth.boothID << endl;
+//         cout << "Amount: " << booth.amount << endl;
+//         cout << "------------------------" << endl;
+//     }
+// }
 
 // ==========================
 // SESSION SCHEDULING MODULE
@@ -2641,7 +2640,6 @@ void viewSessionsByExhibitor(const string& email) {
         cout << "You have not scheduled any sessions yet.\n";
     }
 }
-
 
 void viewSessionsByAttendee(const string& email) {
     // 1. Load attendee's tickets
@@ -2825,6 +2823,143 @@ void ExhibitorSessionSelection(const string& email) {
 }
 
 // ==========================
+// MONITORING MODULE
+// ==========================
+void monitorExhibitorStats(const string& exhibitorEmail) {
+
+    vector<Booth> booths; loadBooths(booths);
+    vector<Session> sessions; loadSessions(sessions);
+
+    cout << "\n========================================================\n";
+    cout << "||         Exhibitor Monitoring Dashboard             ||\n";
+    cout << "========================================================\n";
+
+    cout << "Exhibitor: " << exhibitorEmail;
+
+    cout << "\n=============================\n";
+    cout << "||       Booth Stats       ||\n";
+    cout << "=============================\n";
+
+    bool boothFound = false;
+    for (const auto& booth : booths) {
+        if (booth.userEmail == exhibitorEmail) {
+            cout << "Venue: " << booth.venueID << endl
+                 << "Booth: " << booth.boothID << endl
+                 << "Amount Paid: RM" << fixed << setprecision(2) << booth.amount << endl
+                 << "Status: " << (booth.isRented ? "Rented" : "Refunded") << endl
+                 << endl;
+            boothFound = true;
+        }
+    }
+    if (!boothFound) {
+        cout << "No booths booked yet.\n";
+    }
+
+    cout << "==============================\n";
+    cout << "||    Scheduled Sessions    ||\n";
+    cout << "==============================\n";
+
+    bool sessionFound = false;
+    for (const auto& session : sessions) {
+        if (session.exhibitorEmail == exhibitorEmail) {
+            cout << "Session ID: " << session.sessionID << endl
+                 << "Venue: " << session.venueID << endl
+                 << "Topic: " << session.topic << endl
+                 << "Time Slot: " << session.timeSlot << endl
+                 << endl;
+            sessionFound = true;
+        }
+    }
+    if (!sessionFound) {
+        cout << "No sessions scheduled yet.\n";
+    }
+
+}
+
+void monitorAdminStats() {
+
+    vector<Ticket> tickets; loadTickets(tickets);
+    vector<Booth> booths; loadBooths(booths);
+    vector<Session> sessions; loadSessions(sessions);
+    vector<Venue> venues; loadVenues(venues);
+
+    if (tickets.empty()) {
+        cout << "No ticket sales data available.\n";
+        return;
+    }
+
+    cout << "\n==================================\n";
+    cout << "||     Monitor Venue Stat       ||\n";
+    cout << "==================================\n";
+
+    for (size_t i = 0; i < venues.size(); i++) {
+        cout << i + 1 << ". " << venues[i].venueID << " - " << venues[i].eventName << endl;
+    }
+
+    cout << endl;
+
+    int choice = getValidatedChoice(0, venues.size(), "Enter the number of the venue to view stats: ");
+    
+    if (choice == 0) {
+        cout << "Returning to dashboard.\n\n";
+        return;
+    }
+
+    Venue selectedVenue = venues[choice - 1];
+
+    cout << "\nMonitoring: Venue " << selectedVenue.venueID << " - " << selectedVenue.eventName << endl;
+
+    // ticket sales
+    int ticketCount = 0;
+    double ticketRevenue = 0.0;
+
+    for (const auto& ticket : tickets) {
+        if (ticket.eventName == selectedVenue.eventName) {
+            ticketCount++;
+            ticketRevenue += ticket.amount;
+        }
+    }
+    cout << "==========================================\n";
+    cout << "||         Ticket Sales Summary         ||\n";
+    cout << "==========================================\n";
+    cout << "Total Tickets Sold: " << ticketCount << endl;
+    cout << "Total Ticket Revenue: RM " << fixed << setprecision(2) << ticketRevenue << endl;
+
+    // booth sales
+    int boothCount = 0;
+    double boothRevenue = 0.0;
+    
+    for (const auto& booth : booths) {
+        if (booth.venueID == selectedVenue.venueID && booth.isRented) {
+            boothCount++;
+            boothRevenue += booth.amount;
+        }
+    }
+    cout << "==========================================\n";
+    cout << "||          Booth Sales Summary         ||\n";
+    cout << "==========================================\n";
+    cout << "Total Booths Rented: " << boothCount << endl;
+    cout << "Total Booth Revenue: RM " << fixed << setprecision(2) << boothRevenue << endl;
+    displayBoothLayout(selectedVenue);
+
+    // sessions scheduled
+    cout << "==========================================\n";
+    cout << "||           Sessions Summary           ||\n";
+    cout << "==========================================\n";
+    bool foundSession = false;
+    for (const auto& session : sessions) {
+        if (session.venueID == selectedVenue.venueID) {
+            cout << "[" << session.sessionID << "] " << session.topic << " at " << session.timeSlot << " (Exhibitor: " << session.exhibitorEmail << ")\n";
+            foundSession = true;
+        }
+    }
+    if (!foundSession) {
+        cout << " - No sessions scheduled yet.\n";
+    }
+
+}
+
+// ==========================
 // PROFILE DASHBOARD
 // ==========================
 void attendeeDashboard(Attendee &a, vector<Announcement> &annc, vector<UserCredential> &credentials) {
@@ -2899,9 +3034,9 @@ void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc, vector<UserCre
         cout << "|| 4. View Event Announcements                     ||\n";
         cout << "|| 5. Book Booths                                  ||\n";
         cout << "|| 6. Manage Booked Booths                         ||\n";
-        cout << "|| 7. Monitor Booth/Session Stats                  ||\n";
-        cout << "|| 8. Schedule Sessions                            ||\n";
-        cout << "|| 9. Manage Sessions Scheduled                    ||\n";
+        cout << "|| 7. Schedule Sessions                            ||\n";
+        cout << "|| 8. Manage Sessions Scheduled                    ||\n";
+        cout << "|| 9. Monitor Booth/Session Stats                  ||\n";
         cout << "|| 0. Logout                                       ||\n";
         cout << "=====================================================\n";
         cout << "Choice: ";
@@ -2934,14 +3069,14 @@ void exhibitorDashboard(Exhibitor &e, vector<Announcement> &annc, vector<UserCre
         else if (choice == "6") { // Manage Booth
             exhibitorBoothSelection(e.email); 
         }
-        else if (choice == "7") {
-
-        }
-        else if (choice == "8") { // Schedule Session
+        else if (choice == "7") { // Schedule Session
             scheduleSession(e.email);
         }
-        else if (choice == "9") { // Manage Session
+        else if (choice == "8") { // Manage Session
             ExhibitorSessionSelection(e.email);
+        }
+        else if (choice == "9") { // Monitor Stats
+            monitorExhibitorStats(e.email);
         }
         else if (choice == "0") {
             cout << "Logging out...\n";
@@ -2960,10 +3095,10 @@ void adminDashboard(Admin &ad, vector<Announcement> &annc, vector<UserCredential
         cout << "|| 2. Update Profile                               ||\n"; 
         cout << "|| 3. Manage Event Announcements                   ||\n"; 
         cout << "|| 4. Manage Event Venues                          ||\n";
-        cout << "|| 5. Monitor Ticket/Booth/Session Activity        ||\n"; 
-        cout << "|| 6. Manage Reports                               ||\n"; 
-        cout << "|| 7. View Sessions                                ||\n"; 
-        cout << "|| 8. Manage Feedbacks                             ||\n"; 
+        cout << "|| 5. View Sessions                                ||\n"; 
+        cout << "|| 6. Manage Feedbacks                             ||\n"; 
+        cout << "|| 7. Monitor Ticket/Booth/Session Stats           ||\n"; 
+        cout << "|| 8. Manage Reports                               ||\n"; 
         cout << "|| 9. Search Users/Events                          ||\n"; 
         cout << "|| 0. Logout                                       ||\n";
         cout << "=====================================================\n";
@@ -2986,18 +3121,19 @@ void adminDashboard(Admin &ad, vector<Announcement> &annc, vector<UserCredential
         else if (choice == "4") { // Manage Event Venues
             adminEventSelection();
         }
-        else if (choice == "5") {
-
-        }
-        else if (choice == "6") {
-
-        }
-        else if (choice == "7") { // View Sessions
+        else if (choice == "5") { // View Sessions
             viewAllSessions();
         }
-        else if (choice == "8") { // Manage Feedbacks
+        else if (choice == "6") { // Manage Feedbacks
             adminFeedbackSelection();
         }
+        else if (choice == "7") { // Monitor Stats
+            monitorAdminStats();
+        }
+        else if (choice == "8") {
+
+        }
+
         else if (choice == "9") {
 
         }
