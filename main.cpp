@@ -1980,6 +1980,7 @@ void bookBooth(vector<Venue>& venues, vector<Booth>& booths, const string& email
 
     string boothID; 
     while(true) {
+        bool sameBooth = false;
         cout << "Enter booth ID to rent (e.g. A1, B2): ";
         getline(cin, boothID);
         
@@ -1992,17 +1993,38 @@ void bookBooth(vector<Venue>& venues, vector<Booth>& booths, const string& email
         for (const auto& booked : booths) {
             if (booked.venueID == v.venueID && booked.boothID == boothID && booked.isRented) {
                 cout << "Booth already booked.\n\n";
-                continue;
+                sameBooth = true;
             }
         }
 
-        break;
+        if (!sameBooth)
+        {
+            break;
+        }        
     }
 
     double price = 0.0;
     for (const auto& b : v.boothType) {
         if (b.boothID == boothID) price = b.price;
     }
+    cout << "Booth price: RM" << fixed << setprecision(2) << price << endl;
+    
+    char confirm;
+    while(true) {
+        cout << "Confirm rental of booth " << boothID << "? (y/n): ";
+        cin >> confirm;
+        cin.ignore();
+
+        if(confirm == 'Y' || confirm == 'N' || confirm == 'y' || confirm == 'n') break;
+
+        cout << "Invalid input. Please try again.\n\n";
+    }
+
+    if(confirm == 'N' || confirm == 'n') {
+        cout << "Booth rental cancelled.\n";
+        return;
+    }
+
     Booth b;
     b.userEmail = email;
     b.venueID = v.venueID;
@@ -2011,6 +2033,7 @@ void bookBooth(vector<Venue>& venues, vector<Booth>& booths, const string& email
     b.isRented = true;
     booths.push_back(b);
     saveBooth(b);
+
     cout << "Booth booked successfully!\n";
 }
 

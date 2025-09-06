@@ -1,2 +1,3 @@
 exhibitor1@gmail.com,A,A1,1,35.5
 exhibitor1@gmail.com,A,C2,0,35.5
+exhibitor2@gmail.com,A,C2,1,35.5
